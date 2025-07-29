@@ -5,6 +5,7 @@ import {
   SelectItem,
   AddToCartBtn,
   CartItem,
+  CartDisplay,
   ProductDropdown,
   ProductDropdownOptions,
   StockInfo,
@@ -26,6 +27,13 @@ import {
   TIMER_INTERVALS,
 } from './constants';
 import { lightningSaleTimer, suggestSaleTimer } from './utils/eventTimers';
+import {
+  addCartItem,
+  findCartItem,
+  getCartChildren,
+  setupCartClickHandler,
+  calculateTotal,
+} from './utils';
 
 let bonusPts = 0;
 let stockInfo;
@@ -57,9 +65,8 @@ function main() {
   selectorContainer.appendChild(addBtn);
   selectorContainer.appendChild(stockInfo);
   leftColumn.appendChild(selectorContainer);
-  cartDisp = document.createElement('div');
+  cartDisp = CartDisplay();
   leftColumn.appendChild(cartDisp);
-  cartDisp.id = 'cart-items';
 
   const rightColumn = OrderSummary();
 
@@ -87,6 +94,15 @@ function main() {
 
   lightningSaleTimer(onUpdateSelectOptions, doUpdatePricesInCart);
   suggestSaleTimer(onUpdateSelectOptions, doUpdatePricesInCart, cartDisp, lastSel);
+
+  // 장바구니 클릭 이벤트 설정
+  setupCartClickHandler(
+    cartDisp,
+    handleCalculateCartStuff,
+    onUpdateSelectOptions,
+    PRODUCT_LIST,
+    QUANTITY_THRESHOLDS
+  );
 }
 
 let sum;
@@ -140,7 +156,7 @@ function handleCalculateCartStuff() {
   totalAmt = 0;
   itemCnt = 0;
   originalTotal = totalAmt;
-  cartItems = cartDisp.children;
+  cartItems = getCartChildren(cartDisp);
   subTot = 0;
   bulkDisc = subTot;
   itemDiscounts = [];
@@ -348,7 +364,8 @@ var doRenderBonusPoints = function () {
   let hasMouse;
   let hasMonitorArm;
   let nodes;
-  if (cartDisp.children.length === 0) {
+  const cartItems = getCartChildren(cartDisp);
+  if (cartItems.length === 0) {
     document.getElementById('loyalty-points').style.display = 'none';
     return;
   }
@@ -368,7 +385,7 @@ var doRenderBonusPoints = function () {
   hasKeyboard = false;
   hasMouse = false;
   hasMonitorArm = false;
-  nodes = cartDisp.children;
+  nodes = cartItems;
   for (const node of nodes) {
     let product = null;
     for (let pIdx = 0; pIdx < PRODUCT_LIST.length; pIdx++) {
@@ -457,19 +474,8 @@ var handleStockInfoUpdate = function () {
   stockInfo.textContent = infoMsg;
 };
 function doUpdatePricesInCart() {
-  let totalCount = 0,
-    j = 0;
-  let cartItems;
-  while (cartDisp.children[j]) {
-    const qty = cartDisp.children[j].querySelector('.quantity-number');
-    totalCount += qty ? parseInt(qty.textContent) : 0;
-    j++;
-  }
-  totalCount = 0;
-  for (j = 0; j < cartDisp.children.length; j++) {
-    totalCount += parseInt(cartDisp.children[j].querySelector('.quantity-number').textContent);
-  }
-  cartItems = cartDisp.children;
+  let totalCount = calculateTotal(cartDisp);
+  const cartItems = getCartChildren(cartDisp);
   for (let i = 0; i < cartItems.length; i++) {
     const itemId = cartItems[i].id;
     let product = null;
@@ -535,7 +541,7 @@ addBtn.addEventListener('click', function () {
     }
   }
   if (itemToAdd && itemToAdd.q > 0) {
-    const item = document.getElementById(itemToAdd['id']);
+    const item = findCartItem(cartDisp, itemToAdd.id);
     if (item) {
       const qtyElem = item.querySelector('.quantity-number');
       const newQty = parseInt(qtyElem['textContent']) + 1;
@@ -547,49 +553,10 @@ addBtn.addEventListener('click', function () {
       }
     } else {
       const newItem = CartItem(itemToAdd);
-
-      cartDisp.appendChild(newItem);
+      addCartItem(cartDisp, newItem);
       itemToAdd.q--;
     }
     handleCalculateCartStuff();
     lastSel = selItem;
-  }
-});
-cartDisp.addEventListener('click', function (event) {
-  let tgt = event.target;
-  if (tgt.classList.contains('quantity-change') || tgt.classList.contains('remove-item')) {
-    const prodId = tgt.dataset.productId;
-    const itemElem = document.getElementById(prodId);
-    let prod = null;
-    for (let prdIdx = 0; prdIdx < PRODUCT_LIST.length; prdIdx++) {
-      if (PRODUCT_LIST[prdIdx].id === prodId) {
-        prod = PRODUCT_LIST[prdIdx];
-        break;
-      }
-    }
-    if (tgt.classList.contains('quantity-change')) {
-      const qtyChange = parseInt(tgt.dataset.change);
-      const qtyElem = itemElem.querySelector('.quantity-number');
-      const currentQty = parseInt(qtyElem.textContent);
-      const newQty = currentQty + qtyChange;
-      if (newQty > 0 && newQty <= prod.q + currentQty) {
-        qtyElem.textContent = newQty;
-        prod.q -= qtyChange;
-      } else if (newQty <= 0) {
-        prod.q += currentQty;
-        itemElem.remove();
-      } else {
-        alert('재고가 부족합니다.');
-      }
-    } else if (tgt.classList.contains('remove-item')) {
-      const qtyElem = itemElem.querySelector('.quantity-number');
-      const remQty = parseInt(qtyElem.textContent);
-      prod.q += remQty;
-      itemElem.remove();
-    }
-    if (prod && prod.q < QUANTITY_THRESHOLDS.LOW_STOCK) {
-    }
-    handleCalculateCartStuff();
-    onUpdateSelectOptions();
   }
 });

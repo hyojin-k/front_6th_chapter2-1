@@ -6,6 +6,7 @@ export * from './SelectItemSection/SelectorContainer';
 export * from './SelectItemSection/SelectItem';
 export * from './SelectItemSection/AddToCartBtn';
 export * from './SelectItemSection/CartItem';
+export * from './SelectItemSection/CartDisplay';
 export * from './SelectItemSection/ProductDropdown';
 export * from './SelectItemSection/ProductDropdownOptions';
 export * from './SelectItemSection/StockInfo';
