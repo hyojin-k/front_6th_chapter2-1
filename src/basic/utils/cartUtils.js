@@ -38,11 +38,11 @@ export function setupCartClickHandler(
         const qtyElem = itemElem.querySelector('.quantity-number');
         const currentQty = parseInt(qtyElem.textContent);
         const newQty = currentQty + qtyChange;
-        if (newQty > 0 && newQty <= prod.q + currentQty) {
+        if (newQty > 0 && newQty <= prod.quantity + currentQty) {
           qtyElem.textContent = newQty;
-          prod.q -= qtyChange;
+          prod.quantity -= qtyChange;
         } else if (newQty <= 0) {
-          prod.q += currentQty;
+          prod.quantity += currentQty;
           itemElem.remove();
         } else {
           alert('재고가 부족합니다.');
@@ -50,10 +50,10 @@ export function setupCartClickHandler(
       } else if (tgt.classList.contains('remove-item')) {
         const qtyElem = itemElem.querySelector('.quantity-number');
         const remQty = parseInt(qtyElem.textContent);
-        prod.q += remQty;
+        prod.quantity += remQty;
         itemElem.remove();
       }
-      if (prod && prod.q < QUANTITY_THRESHOLDS.LOW_STOCK) {
+      if (prod && prod.quantity < QUANTITY_THRESHOLDS.LOW_STOCK) {
       }
       handleCalculateCartStuff();
       onUpdateSelectOptions();
