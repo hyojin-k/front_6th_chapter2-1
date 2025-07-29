@@ -9,7 +9,7 @@ export const lightningSaleTimer = (onUpdateSelectOptions, doUpdatePricesInCart) 
       if (luckyItem.quantity > 0 && !luckyItem.onSale) {
         luckyItem.price = Math.round((luckyItem.originalPrice * 80) / 100);
         luckyItem.onSale = true;
-        alert('⚡번개세일! ' + luckyItem.name + '이(가) 20% 할인 중입니다!');
+        alert(`⚡번개세일! ${luckyItem.name}이(가) 20% 할인 중입니다!`);
         onUpdateSelectOptions();
         doUpdatePricesInCart();
       }
@@ -41,7 +41,7 @@ export const suggestSaleTimer = (
           }
         }
         if (suggest) {
-          alert('💝 ' + suggest.name + '은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!');
+          alert(`💝 ${suggest.name}은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!`);
           suggest.price = Math.round((suggest.price * (100 - DISCOUNT_RATES.SUGGEST)) / 100);
           suggest.suggestSale = true;
           onUpdateSelectOptions();
