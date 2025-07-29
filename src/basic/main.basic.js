@@ -228,28 +228,7 @@ function handleCalculateCartStuff() {
       if (q >= QUANTITY_THRESHOLDS.BULK_DISCOUNT) {
         const curItemId = curItem.id;
         disc = DISCOUNT_RATES[curItemId];
-        // if (discountRate) {
-        //   disc = discountRate;
-        // }
-        // if (curItem.id === KEYBOARD) {
-        //   disc = 10 / 100;
-        // } else {
-        //   if (curItem.id === MOUSE) {
-        //     disc = 15 / 100;
-        //   } else {
-        //     if (curItem.id === MONITOR_ARM) {
-        //       disc = 20 / 100;
-        //     } else {
-        //       if (curItem.id === NOTEBOOK_POUCH) {
-        //         disc = 5 / 100;
-        //       } else {
-        //         if (curItem.id === LOFI_SPEAKER) {
-        //           disc = 25 / 100;
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
+
         if (disc > 0) {
           itemDiscounts.push({ name: curItem.name, discount: disc * 100 });
         }

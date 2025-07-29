@@ -6,11 +6,11 @@ export const LOFI_SPEAKER = `p5`;
 
 // 할인 적용 상수
 export const DISCOUNT_RATES = {
-  KEYBOARD: 0.1,
-  MOUSE: 0.15,
-  MONITOR_ARM: 0.2,
-  NOTEBOOK_POUCH: 0.05,
-  LOFI_SPEAKER: 0.25,
+  [KEYBOARD]: 0.1,
+  [MOUSE]: 0.15,
+  [MONITOR_ARM]: 0.2,
+  [NOTEBOOK_POUCH]: 0.05,
+  [LOFI_SPEAKER]: 0.25,
 
   BULK: 0.25,
   TUESDAY: 0.1,
