@@ -1,4 +1,4 @@
-export function AddToCartBtn() {
+export function AddButton() {
   const addBtn = document.createElement('button');
   addBtn.id = 'add-to-cart';
   addBtn.innerHTML = 'Add to Cart';
