@@ -4,50 +4,44 @@ export const MONITOR_ARM = 'p3';
 export const NOTEBOOK_POUCH = 'p4';
 export const LOFI_SPEAKER = `p5`;
 
-export const prodList = [
-  {
-    id: KEYBOARD,
-    name: '버그 없애는 키보드',
-    val: 10000,
-    originalVal: 10000,
-    q: 50,
-    onSale: false,
-    suggestSale: false,
-  },
-  {
-    id: MOUSE,
-    name: '생산성 폭발 마우스',
-    val: 20000,
-    originalVal: 20000,
-    q: 30,
-    onSale: false,
-    suggestSale: false,
-  },
-  {
-    id: MONITOR_ARM,
-    name: '거북목 탈출 모니터암',
-    val: 30000,
-    originalVal: 30000,
-    q: 20,
-    onSale: false,
-    suggestSale: false,
-  },
-  {
-    id: NOTEBOOK_POUCH,
-    name: '에러 방지 노트북 파우치',
-    val: 15000,
-    originalVal: 15000,
-    q: 0,
-    onSale: false,
-    suggestSale: false,
-  },
-  {
-    id: LOFI_SPEAKER,
-    name: `코딩할 때 듣는 Lo-Fi 스피커`,
-    val: 25000,
-    originalVal: 25000,
-    q: 10,
-    onSale: false,
-    suggestSale: false,
-  },
-];
+// 할인 적용 상수
+export const DISCOUNT_RATES = {
+  KEYBOARD: 0.1,
+  MOUSE: 0.15,
+  MONITOR_ARM: 0.2,
+  NOTEBOOK_POUCH: 0.05,
+  LOFI_SPEAKER: 0.25,
+
+  BULK: 0.25,
+  TUESDAY: 0.1,
+  LIGHTNING: 0.2,
+  SUGGEST: 0.05,
+};
+
+// 할인 적용 최소 수량 상수
+export const QUANTITY_THRESHOLDS = {
+  BULK_DISCOUNT: 10,
+  BULK_30: 30,
+  BULK_20: 20,
+  BULK_10: 10,
+  LOW_STOCK: 5,
+};
+
+// 포인트 적립 상수
+export const POINT_RATES = {
+  DEFAULT: 0.001,
+  TUESDAY: 2,
+  SET_KEYBOARD_MOUSE: 50,
+  SET_KEYBOARD_MOUSE_MONITOR_ARM: 100,
+  BULK_10: 20,
+  BULK_20: 50,
+  BULK_30: 100,
+};
+
+// 타이머 상수
+export const TIMER_INTERVALS = {
+  LIGHTNING_SALE: 30000,
+  SUGGEST_SALE: 60000,
+  LIGHTNING_DELAY: 10000,
+  SUGGEST_DELAY: 20000,
+};
