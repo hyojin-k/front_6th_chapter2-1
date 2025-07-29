@@ -13,6 +13,23 @@ export function getCartChildren(cartContainer) {
   return cartContainer.children;
 }
 
+// 상품 ID로 상품 찾기
+export function findProductById(productList, id) {
+  return productList.find((product) => product.id === id);
+}
+
+// 장바구니에 있는 각 상품의 개수 계산
+export function getProductCounts(cartItems, productList) {
+  const counts = {};
+  for (const cartItem of cartItems) {
+    const product = findProductById(productList, cartItem.id);
+    if (product) {
+      counts[product.id] = (counts[product.id] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
 // 장바구니 클릭 이벤트 설정
 export function setupCartClickHandler(
   cartContainer,
@@ -26,13 +43,8 @@ export function setupCartClickHandler(
     if (tgt.classList.contains('quantity-change') || tgt.classList.contains('remove-item')) {
       const prodId = tgt.dataset.productId;
       const itemElem = document.getElementById(prodId);
-      let prod = null;
-      for (let prdIdx = 0; prdIdx < PRODUCT_LIST.length; prdIdx++) {
-        if (PRODUCT_LIST[prdIdx].id === prodId) {
-          prod = PRODUCT_LIST[prdIdx];
-          break;
-        }
-      }
+      const prod = findProductById(PRODUCT_LIST, prodId);
+
       if (tgt.classList.contains('quantity-change')) {
         const qtyChange = parseInt(tgt.dataset.change);
         const qtyElem = itemElem.querySelector('.quantity-number');
