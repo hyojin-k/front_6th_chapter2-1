@@ -38,22 +38,24 @@ export function getProductCounts(cartItems, productList) {
   return counts;
 }
 
-// 장바구니 총합 계산
-export function calculateCartTotals(cartItems, productList) {
-  let totalAmount = 0;
-  let itemCount = 0;
-  let subtotal = 0;
-  const itemDiscounts = [];
+// 재고 부족 상품 확인
+function findLowStockItems(productList) {
   const lowStockItems = [];
-
-  // 재고 확인
   for (let productIndex = 0; productIndex < productList.length; productIndex++) {
     if (productList[productIndex].quantity < 5 && productList[productIndex].quantity > 0) {
       lowStockItems.push(productList[productIndex].name);
     }
   }
+  return lowStockItems;
+}
 
-  // 장바구니 아이템 계산
+// 장바구니 아이템별 계산 및 개별 할인 적용
+function calculateCartItemTotals(cartItems, productList) {
+  let totalAmount = 0;
+  let itemCount = 0;
+  let subtotal = 0;
+  const itemDiscounts = [];
+
   for (let i = 0; i < cartItems.length; i++) {
     const cartItem = cartItems[i];
     const product = findProductById(productList, cartItem.id);
@@ -68,7 +70,7 @@ export function calculateCartTotals(cartItems, productList) {
     itemCount += quantity;
     subtotal += itemTotal;
 
-    // 할인 적용
+    // 개별 상품 할인 적용
     if (quantity >= QUANTITY_THRESHOLDS.BULK_DISCOUNT) {
       discount = DISCOUNT_RATES[product.id] || 0;
       if (discount > 0) {
@@ -79,34 +81,63 @@ export function calculateCartTotals(cartItems, productList) {
     totalAmount += itemTotal * (1 - discount);
   }
 
-  // 대량 할인 적용
-  const originalTotal = subtotal;
+  return { totalAmount, itemCount, subtotal, itemDiscounts };
+}
+
+// 대량 구매 할인 적용
+function applyBulkDiscount(totalAmount, subtotal, itemCount) {
+  let finalAmount = totalAmount;
   let discountRate = 0;
 
   if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-    totalAmount = (subtotal * 75) / 100;
+    finalAmount = (subtotal * 75) / 100;
     discountRate = DISCOUNT_RATES.BULK;
   } else {
     discountRate = (subtotal - totalAmount) / subtotal;
   }
 
-  // 화요일 할인 적용
+  return { finalAmount, discountRate };
+}
+
+// 화요일 할인 적용
+function applyTuesdayDiscount(totalAmount, originalTotal) {
   const today = new Date();
   const isTuesday = today.getDay() === 2;
+  let finalAmount = totalAmount;
+  let discountRate = 0;
+
   if (isTuesday && totalAmount > 0) {
-    totalAmount = (totalAmount * 90) / 100;
-    discountRate = 1 - totalAmount / originalTotal;
+    finalAmount = (totalAmount * 90) / 100;
+    discountRate = 1 - finalAmount / originalTotal;
+  } else {
+    discountRate = (originalTotal - totalAmount) / originalTotal;
   }
 
+  return { finalAmount, discountRate, isTuesday };
+}
+
+// 장바구니 총합 계산 (메인 함수)
+export function calculateCartTotals(cartItems, productList) {
+  const lowStockItems = findLowStockItems(productList);
+  const itemTotals = calculateCartItemTotals(cartItems, productList);
+  const originalTotal = itemTotals.subtotal;
+
+  const bulkDiscountResult = applyBulkDiscount(
+    itemTotals.totalAmount,
+    itemTotals.subtotal,
+    itemTotals.itemCount
+  );
+  const tuesdayDiscountResult = applyTuesdayDiscount(bulkDiscountResult.finalAmount, originalTotal);
+
   return {
-    totalAmount,
-    itemCount,
-    subtotal,
+    totalAmount: tuesdayDiscountResult.finalAmount,
+    itemCount: itemTotals.itemCount,
+    subtotal: itemTotals.subtotal,
     originalTotal,
-    itemDiscounts,
+    itemDiscounts: itemTotals.itemDiscounts,
     lowStockItems,
-    discountRate,
-    isTuesday,
+    discountRate: tuesdayDiscountResult.discountRate,
+    isTuesday: tuesdayDiscountResult.isTuesday,
   };
 }
 

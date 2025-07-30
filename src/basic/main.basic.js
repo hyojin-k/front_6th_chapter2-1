@@ -70,10 +70,8 @@ function calculateCartState(domElements, currentState, productList) {
   return newState;
 }
 
-function main() {
-  let appState = createAppState();
-
-  // DOM 요소들을 로컬 변수로 관리
+// DOM 요소들 생성 및 구조화
+function createDomElements() {
   const root = document.getElementById('app');
   const header = Header();
   const gridContainer = GridContainer();
@@ -107,22 +105,25 @@ function main() {
   root.appendChild(manualToggle);
   root.appendChild(manualOverlay);
 
-  // DOM 요소들을 객체로 관리
-  const domElements = {
+  return {
     selectElement,
     stockInfo,
     addButton,
     cartDisplay,
     summaryElement,
   };
+}
 
-  // 초기 설정
-  updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions);
-  appState = calculateCartState(domElements, appState, PRODUCT_LIST);
+// 앱 초기화
+function initializeApp(domElements, appState) {
+  updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions);
+  return calculateCartState(domElements, appState, PRODUCT_LIST);
+}
 
-  // 타이머 설정
+// 타이머 설정
+function setupTimers(domElements, appState) {
   lightningSaleTimer(
-    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
       updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
       appState = calculateCartState(domElements, appState, PRODUCT_LIST);
@@ -130,7 +131,7 @@ function main() {
   );
 
   suggestSaleTimer(
-    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
       updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
       appState = calculateCartState(domElements, appState, PRODUCT_LIST);
@@ -138,27 +139,45 @@ function main() {
     domElements.cartDisplay,
     appState.lastSelectedProduct
   );
+}
 
-  // 장바구니 클릭 이벤트 설정
+// 이벤트 리스너 설정
+function setupEventListeners(domElements, appState) {
+  // 장바구니 클릭 이벤트
   initCartClickHandler(
     domElements.cartDisplay,
     () => {
       appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     },
-    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions),
     PRODUCT_LIST
   );
 
   // 장바구니 추가 버튼 이벤트
-  addButton.addEventListener('click', function () {
-    const result = addToCart(selectElement.value, domElements.cartDisplay, PRODUCT_LIST, CartItem);
+  domElements.addButton.addEventListener('click', function () {
+    const result = addToCart(
+      domElements.selectElement.value,
+      domElements.cartDisplay,
+      PRODUCT_LIST,
+      CartItem
+    );
     if (result.success) {
-      appState = updateAppState(appState, { lastSelectedProduct: selectElement.value });
+      appState = updateAppState(appState, { lastSelectedProduct: domElements.selectElement.value });
       appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     } else if (result.error) {
       alert(result.error);
     }
   });
+}
+
+// 메인 함수
+function main() {
+  let appState = createAppState();
+  const domElements = createDomElements();
+
+  appState = initializeApp(domElements, appState);
+  setupTimers(domElements, appState);
+  setupEventListeners(domElements, appState);
 }
 
 main();
