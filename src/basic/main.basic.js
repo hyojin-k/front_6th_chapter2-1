@@ -31,6 +31,7 @@ import {
   calculateCartTotals,
 } from './utils';
 
+// 앱 상태 생성
 function createAppState() {
   return {
     bonusPoints: 0,
@@ -45,7 +46,7 @@ function updateAppState(currentState, newState) {
   return { ...currentState, ...newState };
 }
 
-// 계산 및 UI 업데이트
+// 계산 및 UI 업데이트 (상태 의존)
 function calculateCartState(domElements, currentState, productList) {
   const calculationResult = calculateCartTotals(
     getCartChildren(domElements.cartDisplay),
@@ -170,12 +171,12 @@ function setupEventListeners(domElements, appState) {
   });
 }
 
-// 메인 함수
 function main() {
   let appState = createAppState();
   const domElements = createDomElements();
 
   appState = initializeApp(domElements, appState);
+
   setupTimers(domElements, appState);
   setupEventListeners(domElements, appState);
 }
