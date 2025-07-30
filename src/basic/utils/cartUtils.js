@@ -4,7 +4,7 @@ export function findProductById(productList, id) {
 }
 
 // 장바구니 아이템 추가
-export function addCartItem(cartContainer, item) {
+export function appendCartItem(cartContainer, item) {
   cartContainer.appendChild(item);
 }
 

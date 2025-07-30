@@ -21,8 +21,8 @@ import { lightningSaleTimer, suggestSaleTimer } from './utils/eventTimers';
 
 import {
   getCartChildren,
-  setupCartClickHandler,
-  handleAddToCart,
+  initCartClickHandler,
+  addToCart,
   updateSelectOptions,
   updateCartUI,
   updateBonusPoints,
@@ -33,10 +33,10 @@ import {
 
 function createAppState() {
   return {
-    bonusPts: 0,
-    itemCnt: 0,
-    lastSel: null,
-    totalAmt: 0,
+    bonusPoints: 0,
+    itemCount: 0,
+    lastSelectedProduct: null,
+    totalAmount: 0,
   };
 }
 
@@ -46,20 +46,23 @@ function updateAppState(currentState, newState) {
 }
 
 // 계산 및 UI 업데이트
-function recalculateAndUpdate(domElements, currentState, productList) {
-  const calculationResult = calculateCartTotals(getCartChildren(domElements.cartDisp), productList);
+function calculateCartState(domElements, currentState, productList) {
+  const calculationResult = calculateCartTotals(
+    getCartChildren(domElements.cartDisplay),
+    productList
+  );
 
   const newState = updateAppState(currentState, {
-    totalAmt: calculationResult.totalAmt,
-    itemCnt: calculationResult.itemCnt,
+    totalAmount: calculationResult.totalAmount,
+    itemCount: calculationResult.itemCount,
   });
 
   // UI 업데이트
   updateCartUI(domElements, calculationResult, productList);
   updateBonusPoints(
-    domElements.cartDisp,
-    calculationResult.totalAmt,
-    calculationResult.itemCnt,
+    domElements.cartDisplay,
+    calculationResult.totalAmount,
+    calculationResult.itemCount,
     productList
   );
   updateStockInfo(domElements.stockInfo, productList);
@@ -77,20 +80,20 @@ function main() {
   const leftColumn = SelectItem();
   const selectorContainer = SelectorContainer();
 
-  const sel = ProductDropdown();
+  const selectElement = ProductDropdown();
   const stockInfo = StockInfo();
-  const addBtn = AddButton();
+  const addButton = AddButton();
 
-  selectorContainer.appendChild(sel);
-  selectorContainer.appendChild(addBtn);
+  selectorContainer.appendChild(selectElement);
+  selectorContainer.appendChild(addButton);
   selectorContainer.appendChild(stockInfo);
   leftColumn.appendChild(selectorContainer);
 
-  const cartDisp = CartDisplay();
-  leftColumn.appendChild(cartDisp);
+  const cartDisplay = CartDisplay();
+  leftColumn.appendChild(cartDisplay);
 
   const rightColumn = OrderSummary();
-  const sum = rightColumn.querySelector('#cart-total');
+  const summaryElement = rightColumn.querySelector('#cart-total');
 
   const manual = Manual();
   const manualOverlay = ManualOverlay(manual);
@@ -106,52 +109,52 @@ function main() {
 
   // DOM 요소들을 객체로 관리
   const domElements = {
-    sel,
+    selectElement,
     stockInfo,
-    addBtn,
-    cartDisp,
-    sum,
+    addButton,
+    cartDisplay,
+    summaryElement,
   };
 
   // 초기 설정
-  updateSelectOptions(sel, PRODUCT_LIST, ProductDropdownOptions);
-  appState = recalculateAndUpdate(domElements, appState, PRODUCT_LIST);
+  updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions);
+  appState = calculateCartState(domElements, appState, PRODUCT_LIST);
 
   // 타이머 설정
   lightningSaleTimer(
-    () => updateSelectOptions(sel, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
-      updatePricesInCart(domElements.cartDisp, domElements.sum, PRODUCT_LIST);
-      appState = recalculateAndUpdate(domElements, appState, PRODUCT_LIST);
+      updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
+      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     }
   );
 
   suggestSaleTimer(
-    () => updateSelectOptions(sel, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
-      updatePricesInCart(domElements.cartDisp, domElements.sum, PRODUCT_LIST);
-      appState = recalculateAndUpdate(domElements, appState, PRODUCT_LIST);
+      updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
+      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     },
-    domElements.cartDisp,
-    appState.lastSel
+    domElements.cartDisplay,
+    appState.lastSelectedProduct
   );
 
   // 장바구니 클릭 이벤트 설정
-  setupCartClickHandler(
-    domElements.cartDisp,
+  initCartClickHandler(
+    domElements.cartDisplay,
     () => {
-      appState = recalculateAndUpdate(domElements, appState, PRODUCT_LIST);
+      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     },
-    () => updateSelectOptions(sel, PRODUCT_LIST, ProductDropdownOptions),
+    () => updateSelectOptions(selectElement, PRODUCT_LIST, ProductDropdownOptions),
     PRODUCT_LIST
   );
 
   // 장바구니 추가 버튼 이벤트
-  addBtn.addEventListener('click', function () {
-    const result = handleAddToCart(sel.value, domElements.cartDisp, PRODUCT_LIST, CartItem);
+  addButton.addEventListener('click', function () {
+    const result = addToCart(selectElement.value, domElements.cartDisplay, PRODUCT_LIST, CartItem);
     if (result.success) {
-      appState = updateAppState(appState, { lastSel: sel.value });
-      appState = recalculateAndUpdate(domElements, appState, PRODUCT_LIST);
+      appState = updateAppState(appState, { lastSelectedProduct: selectElement.value });
+      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     } else if (result.error) {
       alert(result.error);
     }
