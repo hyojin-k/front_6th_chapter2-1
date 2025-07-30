@@ -17,13 +17,9 @@ export function getTotalStock(productList) {
 
 // 재고 부족 상품 확인
 function findLowStockItems(productList) {
-  const lowStockItems = [];
-  for (let productIndex = 0; productIndex < productList.length; productIndex++) {
-    if (productList[productIndex].quantity < 5 && productList[productIndex].quantity > 0) {
-      lowStockItems.push(productList[productIndex].name);
-    }
-  }
-  return lowStockItems;
+  return productList
+    .filter((product) => product.quantity < 5 && product.quantity > 0)
+    .map((product) => product.name);
 }
 
 // 재고 메시지 생성
@@ -47,27 +43,21 @@ export function getStockMessage(productList) {
 
 // 장바구니의 총 수량 계산
 export function calculateTotal(cartContainer) {
-  let totalCount = 0;
-  const children = cartContainer.children;
-  for (let j = 0; j < children.length; j++) {
-    const qtyElem = children[j].querySelector('.quantity-number');
-    if (qtyElem) {
-      totalCount += parseInt(qtyElem.textContent);
-    }
-  }
-  return totalCount;
+  return Array.from(cartContainer.children)
+    .map((child) => child.querySelector('.quantity-number'))
+    .filter((qtyElem) => qtyElem)
+    .reduce((total, qtyElem) => total + parseInt(qtyElem.textContent), 0);
 }
 
 // 장바구니에 있는 각 상품의 개수 계산
 export function getProductCounts(cartItems, productList) {
-  const counts = {};
-  for (const cartItem of cartItems) {
-    const product = findProductById(productList, cartItem.id);
-    if (product) {
+  return Array.from(cartItems)
+    .map((cartItem) => findProductById(productList, cartItem.id))
+    .filter((product) => product)
+    .reduce((counts, product) => {
       counts[product.id] = (counts[product.id] || 0) + 1;
-    }
-  }
-  return counts;
+      return counts;
+    }, {});
 }
 
 /**
@@ -76,37 +66,39 @@ export function getProductCounts(cartItems, productList) {
 
 // 장바구니 아이템별 계산 및 개별 할인 적용
 function calculateCartItemTotals(cartItems, productList) {
-  let totalAmount = 0;
-  let itemCount = 0;
-  let subtotal = 0;
-  const itemDiscounts = [];
+  const itemCalculations = Array.from(cartItems)
+    .map((cartItem) => {
+      const product = findProductById(productList, cartItem.id);
+      if (!product) return null;
 
-  for (let i = 0; i < cartItems.length; i++) {
-    const cartItem = cartItems[i];
-    const product = findProductById(productList, cartItem.id);
+      const quantityElement = cartItem.querySelector('.quantity-number');
+      const quantity = parseInt(quantityElement.textContent);
+      const itemTotal = product.price * quantity;
+      const individualDiscount = calculateIndividualDiscount(product, quantity);
 
-    if (!product) continue;
+      return {
+        quantity,
+        itemTotal,
+        discountedTotal: itemTotal * (1 - individualDiscount.rate),
+        discount: individualDiscount.applicable
+          ? {
+              name: product.name,
+              discount: individualDiscount.rate * 100,
+            }
+          : null,
+      };
+    })
+    .filter((item) => item !== null);
 
-    const quantityElement = cartItem.querySelector('.quantity-number');
-    const quantity = parseInt(quantityElement.textContent);
-    const itemTotal = product.price * quantity;
-
-    itemCount += quantity;
-    subtotal += itemTotal;
-
-    // 개별 상품 할인 적용
-    const individualDiscount = calculateIndividualDiscount(product, quantity);
-    if (individualDiscount.applicable) {
-      itemDiscounts.push({
-        name: product.name,
-        discount: individualDiscount.rate * 100,
-      });
-    }
-
-    totalAmount += itemTotal * (1 - individualDiscount.rate);
-  }
-
-  return { totalAmount, itemCount, subtotal, itemDiscounts };
+  return itemCalculations.reduce(
+    (acc, item) => ({
+      totalAmount: acc.totalAmount + item.discountedTotal,
+      itemCount: acc.itemCount + item.quantity,
+      subtotal: acc.subtotal + item.itemTotal,
+      itemDiscounts: item.discount ? [...acc.itemDiscounts, item.discount] : acc.itemDiscounts,
+    }),
+    { totalAmount: 0, itemCount: 0, subtotal: 0, itemDiscounts: [] }
+  );
 }
 
 // 대량 구매 할인 적용 (래퍼 함수)

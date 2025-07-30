@@ -34,11 +34,7 @@ export function updateSelectOptions(selectElement, productList, ProductDropdownO
 
   clearContent(selectElement);
 
-  for (let i = 0; i < productList.length; i++) {
-    const item = productList[i];
-    const option = ProductDropdownOptions(item);
-    appendElement(selectElement, option);
-  }
+  productList.map(ProductDropdownOptions).forEach((option) => appendElement(selectElement, option));
 
   const borderColor = totalStock < 50 ? 'orange' : '';
   setBorderColor(selectElement, borderColor);
@@ -130,22 +126,23 @@ function updateCartTuesdayDisplay(isTuesday, totalAmount) {
 
 // 장바구니 아이템 목록 HTML 생성
 function buildCartItemsList(cartItems, productList) {
-  let itemsHtml = '';
-  for (let i = 0; i < cartItems.length; i++) {
-    const product = findProductById(productList, cartItems[i].id);
-    if (!product) continue;
+  return Array.from(cartItems)
+    .map((cartItem) => {
+      const product = findProductById(productList, cartItem.id);
+      if (!product) return null;
 
-    const quantity = getQuantity(cartItems[i]);
-    const itemTotal = product.price * quantity;
+      const quantity = getQuantity(cartItem);
+      const itemTotal = product.price * quantity;
 
-    itemsHtml += `
-      <div class="flex justify-between text-xs tracking-wide text-gray-400">
-        <span>${product.name} x ${quantity}</span>
-        <span>₩${itemTotal.toLocaleString()}</span>
-      </div>
-    `;
-  }
-  return itemsHtml;
+      return `
+        <div class="flex justify-between text-xs tracking-wide text-gray-400">
+          <span>${product.name} x ${quantity}</span>
+          <span>₩${itemTotal.toLocaleString()}</span>
+        </div>
+      `;
+    })
+    .filter((html) => html !== null)
+    .join('');
 }
 
 // 소계 HTML 생성
@@ -233,39 +230,40 @@ export function updatePricesInCart(cartElement, sumElement, productList) {
 function updateCartItemPrices(cartElement, productList) {
   const cartItems = getCartChildren(cartElement);
 
-  for (let i = 0; i < cartItems.length; i++) {
-    const itemId = cartItems[i].id;
-    const product = findProductById(productList, itemId);
-
-    if (product) {
-      const priceDiv = findPriceElement(cartItems[i]);
-      const nameDiv = findNameElement(cartItems[i]);
+  Array.from(cartItems)
+    .map((cartItem) => ({
+      cartItem,
+      product: findProductById(productList, cartItem.id),
+    }))
+    .filter(({ product }) => product)
+    .forEach(({ cartItem, product }) => {
+      const priceDiv = findPriceElement(cartItem);
+      const nameDiv = findNameElement(cartItem);
 
       setContent(priceDiv, generatePriceHtml(product));
       setText(nameDiv, generateProductName(product));
-    }
-  }
+    });
 }
 
 // 장바구니 아이템 스타일 업데이트
 function updateCartItemStyles(cartElement, productList) {
   const cartItems = getCartChildren(cartElement);
 
-  for (let i = 0; i < cartItems.length; i++) {
-    const cartItem = cartItems[i];
-    const product = findProductById(productList, cartItem.id);
-
-    if (!product) continue;
-
-    const quantity = getQuantity(cartItem);
-
-    // 가격 표시 스타일 업데이트
-    const priceElements = findElements(cartItem, '.text-lg, .text-xs');
-    priceElements.forEach(function (element) {
-      if (hasClass(element, 'text-lg')) {
-        const fontWeight = quantity >= 10 ? 'bold' : 'normal';
-        setFontWeight(element, fontWeight);
-      }
+  Array.from(cartItems)
+    .map((cartItem) => ({
+      cartItem,
+      product: findProductById(productList, cartItem.id),
+      quantity: getQuantity(cartItem),
+    }))
+    .filter(({ product }) => product)
+    .forEach(({ cartItem, quantity }) => {
+      // 가격 표시 스타일 업데이트
+      const priceElements = findElements(cartItem, '.text-lg, .text-xs');
+      priceElements.forEach((element) => {
+        if (hasClass(element, 'text-lg')) {
+          const fontWeight = quantity >= 10 ? 'bold' : 'normal';
+          setFontWeight(element, fontWeight);
+        }
+      });
     });
-  }
 }

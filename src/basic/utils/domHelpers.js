@@ -151,19 +151,33 @@ export function updateElementsContent(elements, updateFn) {
 
 export function updateMultipleElements(updates) {
   updates.forEach(({ element, property, value }) => {
-    if (element && property && value !== undefined) {
-      if (property === 'textContent') {
-        setText(element, value);
-      } else if (property === 'innerHTML') {
-        setContent(element, value);
-      } else if (property.startsWith('style.')) {
-        const styleProp = property.replace('style.', '');
-        element.style[styleProp] = value;
-      } else if (property === 'className') {
-        element.className = value;
-      }
-    }
+    updateSingleElement(element, property, value);
   });
+}
+
+// 단일 요소 업데이트 헬퍼 함수
+function updateSingleElement(element, property, value) {
+  if (!element || !property || value === undefined) {
+    return;
+  }
+
+  const updateStrategies = {
+    textContent: () => setText(element, value),
+    innerHTML: () => setContent(element, value),
+    className: () => {
+      element.className = value;
+    },
+  };
+
+  if (updateStrategies[property]) {
+    updateStrategies[property]();
+    return;
+  }
+
+  if (property.startsWith('style.')) {
+    const styleProp = property.replace('style.', '');
+    element.style[styleProp] = value;
+  }
 }
 
 // 안전한 DOM 조작 (element 존재 확인)
