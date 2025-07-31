@@ -37,7 +37,7 @@ const App: React.FC = () => {
   // 계산 결과 업데이트
   useEffect(() => {
     updateCalculation();
-  }, [cartItems, products, updateCalculation]);
+  }, [cartItems, updateCalculation]);
 
   // 장바구니에 상품 추가 핸들러
   const handleAddToCart = () => {

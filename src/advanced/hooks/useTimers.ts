@@ -1,79 +1,95 @@
 import { useEffect, useCallback } from 'react';
-import { PRODUCT_LIST, TIMER_INTERVALS } from '../constants';
+import { CartItemType, ProductType } from '../types';
+import { PRODUCT_LIST } from '../constants';
 
 export const useTimers = (
-  onUpdateProductList: () => void,
-  onUpdateCalculation: () => void,
-  cartItems: any[],
-  lastSelectedProduct: string | null,
-  onApplyDiscount?: (productId: string, discountType: 'lightning' | 'suggest') => void
+  updateProductList: (newProductList: ProductType[]) => void,
+  updateCalculation: () => void,
+  cartItems: CartItemType[],
+  lastSelectedProduct: string,
+  onApplyDiscount: (productId: string, discountType: 'lightning' | 'suggest') => void
 ) => {
-  // 추천 가능한 상품 찾기
-  const findSuggestableProduct = useCallback((lastSelectedProductId: string) => {
-    return PRODUCT_LIST.find(
-      (product) =>
-        product.id !== lastSelectedProductId && product.quantity > 0 && !product.suggestSale
-    );
-  }, []);
+  // 번개세일 타이머
+  const startLightningSaleTimer = useCallback(() => {
+    const randomDelay = Math.random() * 10000; // 0~10초
+    const lightningSaleTimer = setTimeout(() => {
+      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
+      if (availableProducts.length > 0) {
+        const randomProduct =
+          availableProducts[Math.floor(Math.random() * availableProducts.length)];
+        onApplyDiscount(randomProduct.id, 'lightning');
+        alert(`⚡ 번개세일! ${randomProduct.name} 20% 할인!`);
+      }
+    }, randomDelay);
 
-  // 타이머 시작
+    return lightningSaleTimer;
+  }, [onApplyDiscount]);
+
+  // 추천할인 타이머
+  const startSuggestSaleTimer = useCallback(() => {
+    const randomDelay = Math.random() * 20000; // 0~20초
+    const suggestSaleTimer = setTimeout(() => {
+      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
+      if (availableProducts.length > 0) {
+        const otherProducts = availableProducts.filter(
+          (product) => product.id !== lastSelectedProduct
+        );
+        if (otherProducts.length > 0) {
+          const randomProduct = otherProducts[Math.floor(Math.random() * otherProducts.length)];
+          onApplyDiscount(randomProduct.id, 'suggest');
+          alert(`💝 추천할인! ${randomProduct.name} 5% 추가 할인!`);
+        }
+      }
+    }, randomDelay);
+
+    return suggestSaleTimer;
+  }, [lastSelectedProduct, onApplyDiscount]);
+
   useEffect(() => {
-    // 번개 세일 타이머
-    const lightningDelay = Math.random() * TIMER_INTERVALS.LIGHTNING_DELAY;
-    const lightningTimeout = setTimeout(() => {
-      const lightningInterval = setInterval(() => {
-        const luckyIndex = Math.floor(Math.random() * PRODUCT_LIST.length);
-        const luckyItem = PRODUCT_LIST[luckyIndex];
-        if (luckyItem.quantity > 0 && !luckyItem.onSale) {
-          if (onApplyDiscount) {
-            onApplyDiscount(luckyItem.id, 'lightning');
-          }
-          alert(`⚡번개세일! ${luckyItem.name}이(가) 20% 할인 중입니다!`);
-          onUpdateProductList();
-          onUpdateCalculation();
-        }
-      }, TIMER_INTERVALS.LIGHTNING_SALE);
+    // 초기 타이머 시작
+    const lightningTimer = startLightningSaleTimer();
+    const suggestTimer = startSuggestSaleTimer();
 
-      return () => clearInterval(lightningInterval);
-    }, lightningDelay);
+    // 30초마다 번개세일
+    const lightningInterval = setInterval(() => {
+      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
+      if (availableProducts.length > 0) {
+        const randomProduct =
+          availableProducts[Math.floor(Math.random() * availableProducts.length)];
+        onApplyDiscount(randomProduct.id, 'lightning');
+        alert(`⚡ 번개세일! ${randomProduct.name} 20% 할인!`);
+      }
+    }, 30000);
 
-    // 추천 세일 타이머
-    const suggestDelay = Math.random() * TIMER_INTERVALS.SUGGEST_DELAY;
-    const suggestTimeout = setTimeout(() => {
-      const suggestInterval = setInterval(() => {
-        if (cartItems.length === 0) {
-          return;
+    // 60초마다 추천할인
+    const suggestInterval = setInterval(() => {
+      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
+      if (availableProducts.length > 0) {
+        const otherProducts = availableProducts.filter(
+          (product) => product.id !== lastSelectedProduct
+        );
+        if (otherProducts.length > 0) {
+          const randomProduct = otherProducts[Math.floor(Math.random() * otherProducts.length)];
+          onApplyDiscount(randomProduct.id, 'suggest');
+          alert(`💝 추천할인! ${randomProduct.name} 5% 추가 할인!`);
         }
-        if (lastSelectedProduct) {
-          const suggestedProduct = findSuggestableProduct(lastSelectedProduct);
-          if (suggestedProduct) {
-            if (onApplyDiscount) {
-              onApplyDiscount(suggestedProduct.id, 'suggest');
-            }
-            alert(`💝 ${suggestedProduct.name}은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!`);
-            onUpdateProductList();
-            onUpdateCalculation();
-          }
-        }
-      }, TIMER_INTERVALS.SUGGEST_SALE);
+      }
+    }, 60000);
 
-      return () => clearInterval(suggestInterval);
-    }, suggestDelay);
+    // 계산 결과 업데이트
+    updateCalculation();
 
     return () => {
-      clearTimeout(lightningTimeout);
-      clearTimeout(suggestTimeout);
+      clearTimeout(lightningTimer);
+      clearTimeout(suggestTimer);
+      clearInterval(lightningInterval);
+      clearInterval(suggestInterval);
     };
   }, [
-    cartItems,
+    startLightningSaleTimer,
+    startSuggestSaleTimer,
+    updateCalculation,
     lastSelectedProduct,
-    onUpdateProductList,
-    onUpdateCalculation,
     onApplyDiscount,
-    findSuggestableProduct,
   ]);
-
-  return {
-    findSuggestableProduct,
-  };
 };
