@@ -1,12 +1,17 @@
 import React from 'react';
-import { CalculationResultType } from '../../types';
+import { CalculationResultType, CartItemType } from '../../types';
 
 export interface OrderSummaryPropsType {
   calculationResult: CalculationResultType;
+  cartItems?: CartItemType[];
   className?: string;
 }
 
-const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult, className = '' }) => {
+const OrderSummary: React.FC<OrderSummaryPropsType> = ({
+  calculationResult,
+  cartItems = [],
+  className = '',
+}) => {
   const formatPrice = (price: number) => {
     return `₩${price.toLocaleString()}`;
   };
@@ -15,40 +20,129 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult, clas
     return `${discount}%`;
   };
 
+  const buildCartItemsList = () => {
+    if (calculationResult.itemCount === 0) return '';
+
+    return (
+      <div className="space-y-3">
+        {cartItems.map((item) => {
+          const itemTotal = item.product.price * item.quantity;
+          return (
+            <div key={item.id} className="flex justify-between text-xs tracking-wide text-gray-400">
+              <span>
+                {item.product.name} x {item.quantity}
+              </span>
+              <span>{formatPrice(itemTotal)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const buildCartSubtotalHtml = () => {
+    if (calculationResult.subtotal === 0) return null;
+
+    return (
+      <>
+        <div className="border-t border-white/10 my-3"></div>
+        <div className="flex justify-between text-sm tracking-wide">
+          <span>Subtotal</span>
+          <span>{formatPrice(calculationResult.subtotal)}</span>
+        </div>
+      </>
+    );
+  };
+
+  const buildCartDiscountHtml = () => {
+    if (calculationResult.itemDiscounts.length === 0 && !calculationResult.isTuesday) return null;
+
+    return (
+      <div className="space-y-2">
+        {calculationResult.itemDiscounts.map((discount, index) => (
+          <div key={index} className="flex justify-between text-sm tracking-wide text-green-400">
+            <span>
+              {discount.name} ({formatDiscount(discount.discount)})
+            </span>
+            <span>-{formatPrice(calculationResult.subtotal - calculationResult.totalAmount)}</span>
+          </div>
+        ))}
+        {calculationResult.isTuesday && (
+          <div className="flex justify-between text-sm tracking-wide text-blue-400">
+            <span>Tuesday Special (10%)</span>
+            <span>
+              -{formatPrice(calculationResult.originalTotal - calculationResult.totalAmount)}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const buildCartShippingHtml = () => {
+    return (
+      <div className="flex justify-between text-sm tracking-wide text-gray-400">
+        <span>Shipping</span>
+        <span>Free</span>
+      </div>
+    );
+  };
+
+  const buildDiscountInfoHtml = () => {
+    if (calculationResult.discountRate === 0 || calculationResult.itemCount === 0) return null;
+
+    const savedAmount = calculationResult.originalTotal - calculationResult.totalAmount;
+    return (
+      <div className="bg-green-500/20 rounded-lg p-3">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs uppercase tracking-wide text-green-400">총 할인율</span>
+          <span className="text-sm font-medium text-green-400">
+            {(calculationResult.discountRate * 100).toFixed(1)}%
+          </span>
+        </div>
+        <div className="text-2xs text-gray-300">
+          {formatPrice(Math.round(savedAmount))} 할인되었습니다
+        </div>
+      </div>
+    );
+  };
+
+  const buildBonusPointsHtml = () => {
+    if (calculationResult.bonusPoints.finalPoints === 0 || calculationResult.itemCount === 0) {
+      return null;
+    }
+
+    return (
+      <div>
+        <div>
+          적립 포인트:{' '}
+          <span className="font-bold">{calculationResult.bonusPoints.finalPoints}p</span>
+        </div>
+        <div className="text-2xs opacity-70 mt-1">
+          {calculationResult.bonusPoints.pointsDetail.join(', ')}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`bg-black text-white p-8 flex flex-col ${className}`}>
       <h2 className="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
       <div className="flex-1 flex flex-col">
         <div id="summary-details" className="space-y-3">
-          <div className="flex justify-between items-baseline">
-            <span className="text-sm uppercase tracking-wider">Subtotal</span>
-            <div className="text-sm tracking-tight">{formatPrice(calculationResult.subtotal)}</div>
-          </div>
-          {calculationResult.itemDiscounts.length > 0 && (
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm uppercase tracking-wider">Discounts</span>
-              <div className="text-sm tracking-tight text-green-400">
-                -{formatPrice(calculationResult.subtotal - calculationResult.totalAmount)}
-              </div>
-            </div>
+          {calculationResult.itemCount > 0 && (
+            <>
+              {buildCartItemsList()}
+              {buildCartSubtotalHtml()}
+              {buildCartDiscountHtml()}
+              {buildCartShippingHtml()}
+            </>
           )}
-          <div className="flex justify-between items-baseline">
-            <span className="text-sm uppercase tracking-wider">Items</span>
-            <div className="text-sm tracking-tight">{calculationResult.itemCount} items</div>
-          </div>
         </div>
         <div className="mt-auto">
-          {calculationResult.itemDiscounts.length > 0 && (
-            <div id="discount-info" className="mb-4">
-              <div className="text-xs text-blue-400">
-                {calculationResult.itemDiscounts.map((discount, index) => (
-                  <div key={index}>
-                    {discount.name}: {formatDiscount(discount.discount)} 할인
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <div id="discount-info" className="mb-4">
+            {buildDiscountInfoHtml()}
+          </div>
           <div id="cart-total" className="pt-5 border-t border-white/10">
             <div className="flex justify-between items-baseline">
               <span className="text-sm uppercase tracking-wider">Total</span>
@@ -57,10 +151,10 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult, clas
               </div>
             </div>
             <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
-              적립 포인트: {calculationResult.bonusPoints.finalPoints}p
+              {buildBonusPointsHtml()}
             </div>
           </div>
-          {calculationResult.isTuesday && (
+          {calculationResult.isTuesday && calculationResult.totalAmount > 0 && (
             <div id="tuesday-special" className="mt-4 p-3 bg-white/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="text-2xs">🎉</span>

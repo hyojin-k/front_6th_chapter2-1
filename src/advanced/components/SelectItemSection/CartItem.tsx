@@ -1,5 +1,6 @@
 import React from 'react';
 import { CartItemType } from '../../types';
+import { generateProductName, generatePriceHtml } from '../../utils/priceUtils';
 
 export interface CartItemPropsType {
   item: CartItemType;
