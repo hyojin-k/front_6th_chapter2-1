@@ -58,14 +58,9 @@ function calculateCartState(domElements, currentState, productList) {
     itemCount: calculationResult.itemCount,
   });
 
-  // UI 업데이트
+  // UI 업데이트 - 계산 결과 재사용
   updateCartUI(domElements, calculationResult, productList);
-  updateBonusPoints(
-    domElements.cartDisplay,
-    calculationResult.totalAmount,
-    calculationResult.itemCount,
-    productList
-  );
+  updateBonusPoints(domElements.cartDisplay, calculationResult, productList);
   updateStockInfo(domElements.stockInfo, productList);
 
   return newState;
@@ -127,7 +122,6 @@ function setupTimers(domElements, appState) {
     () => updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
       updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
-      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     }
   );
 
@@ -135,7 +129,6 @@ function setupTimers(domElements, appState) {
     () => updateSelectOptions(domElements.selectElement, PRODUCT_LIST, ProductDropdownOptions),
     () => {
       updatePricesInCart(domElements.cartDisplay, domElements.summaryElement, PRODUCT_LIST);
-      appState = calculateCartState(domElements, appState, PRODUCT_LIST);
     },
     domElements.cartDisplay,
     appState.lastSelectedProduct

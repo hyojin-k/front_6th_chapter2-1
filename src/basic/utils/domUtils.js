@@ -191,9 +191,18 @@ function buildDiscountInfoHtml(discountRate, savedAmount) {
  */
 
 // 보너스 포인트 UI 업데이트
-export function updateBonusPoints(cartElement, totalAmount, itemCount, productList) {
+export function updateBonusPoints(cartElement, calculationResult, productList) {
   const cartItems = getCartChildren(cartElement);
-  const bonusResult = calculateBonusPoints(cartItems, totalAmount, itemCount, productList);
+
+  // 이미 계산된 결과가 있으면 재사용, 없으면 새로 계산
+  const bonusResult =
+    calculationResult.bonusPoints ||
+    calculateBonusPoints(
+      cartItems,
+      calculationResult.totalAmount,
+      calculationResult.itemCount,
+      productList
+    );
 
   const pointsElement = findElementById('loyalty-points');
   if (pointsElement) {
@@ -223,33 +232,9 @@ function buildBonusPointsHtml(bonusResult) {
 
 // 장바구니 가격 업데이트 (세일 적용) - 메인 함수
 export function updatePricesInCart(cartElement, sumElement, productList) {
-  updateCartItemPrices(cartElement, productList);
-  updateCartItemStyles(cartElement, productList);
-}
-
-// 장바구니 아이템 가격 업데이트
-function updateCartItemPrices(cartElement, productList) {
   const cartItems = getCartChildren(cartElement);
 
-  Array.from(cartItems)
-    .map((cartItem) => ({
-      cartItem,
-      product: findProductById(productList, cartItem.id),
-    }))
-    .filter(({ product }) => product)
-    .forEach(({ cartItem, product }) => {
-      const priceDiv = findPriceElement(cartItem);
-      const nameDiv = findNameElement(cartItem);
-
-      setContent(priceDiv, generatePriceHtml(product));
-      setText(nameDiv, generateProductName(product));
-    });
-}
-
-// 장바구니 아이템 스타일 업데이트
-function updateCartItemStyles(cartElement, productList) {
-  const cartItems = getCartChildren(cartElement);
-
+  // 단일 순회로 가격과 스타일 모두 업데이트
   Array.from(cartItems)
     .map((cartItem) => ({
       cartItem,
@@ -257,8 +242,14 @@ function updateCartItemStyles(cartElement, productList) {
       quantity: getQuantity(cartItem),
     }))
     .filter(({ product }) => product)
-    .forEach(({ cartItem, quantity }) => {
-      // 가격 표시 스타일 업데이트
+    .forEach(({ cartItem, product, quantity }) => {
+      // 가격 업데이트
+      const priceDiv = findPriceElement(cartItem);
+      const nameDiv = findNameElement(cartItem);
+      setContent(priceDiv, generatePriceHtml(product));
+      setText(nameDiv, generateProductName(product));
+
+      // 스타일 업데이트
       const priceElements = findElements(cartItem, '.text-lg, .text-xs');
       priceElements.forEach((element) => {
         if (hasClass(element, 'text-lg')) {

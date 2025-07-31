@@ -1,17 +1,18 @@
+import {
+  POINT_RATES,
+  WEEKDAYS,
+  QUANTITY_THRESHOLDS,
+  KEYBOARD,
+  MOUSE,
+  MONITOR_ARM,
+} from '../constants';
 import { findProductById } from './cartUtils';
+import { getQuantity } from './domHelpers';
 import {
   calculateIndividualDiscount,
   calculateBulkDiscount,
   calculateTuesdayDiscount,
 } from './discountUtils';
-import {
-  KEYBOARD,
-  MOUSE,
-  MONITOR_ARM,
-  QUANTITY_THRESHOLDS,
-  POINT_RATES,
-  WEEKDAYS,
-} from '../constants';
 
 /**
  * 재고 관련 함수들
@@ -59,10 +60,16 @@ export function calculateTotal(cartContainer) {
 // 장바구니에 있는 각 상품의 개수 계산
 export function getProductCounts(cartItems, productList) {
   return Array.from(cartItems)
-    .map((cartItem) => findProductById(productList, cartItem.id))
-    .filter((product) => product)
-    .reduce((counts, product) => {
-      counts[product.id] = (counts[product.id] || 0) + 1;
+    .map((cartItem) => {
+      const product = findProductById(productList, cartItem.id);
+      if (!product) return null;
+
+      const quantity = getQuantity(cartItem);
+      return { product, quantity };
+    })
+    .filter((item) => item !== null)
+    .reduce((counts, { product, quantity }) => {
+      counts[product.id] = (counts[product.id] || 0) + quantity;
       return counts;
     }, {});
 }
@@ -78,6 +85,7 @@ function calculateCartItemTotals(cartItems, productList) {
       const product = findProductById(productList, cartItem.id);
       if (!product) return null;
 
+      // DOM 조회를 한 번만 수행하고 결과 재사용
       const quantityElement = cartItem.querySelector('.quantity-number');
       const quantity = parseInt(quantityElement.textContent);
       const itemTotal = product.price * quantity;
@@ -155,6 +163,14 @@ export function calculateCartTotals(cartItems, productList) {
   );
   const tuesdayDiscountResult = applyTuesdayDiscount(bulkDiscountResult.finalAmount, originalTotal);
 
+  // 보너스 포인트도 함께 계산하여 중복 계산 방지
+  const bonusPoints = calculateBonusPoints(
+    cartItems,
+    tuesdayDiscountResult.finalAmount,
+    itemTotals.itemCount,
+    productList
+  );
+
   return {
     totalAmount: tuesdayDiscountResult.finalAmount,
     itemCount: itemTotals.itemCount,
@@ -164,6 +180,7 @@ export function calculateCartTotals(cartItems, productList) {
     lowStockItems,
     discountRate: tuesdayDiscountResult.discountRate,
     isTuesday: tuesdayDiscountResult.isTuesday,
+    bonusPoints,
   };
 }
 
