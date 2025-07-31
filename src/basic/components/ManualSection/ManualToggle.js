@@ -8,7 +8,7 @@ export function ManualToggle(manual, manualOverlay) {
   </svg>
   `;
 
-  manualToggle.onclick = function () {
+  manualToggle.onclick = () => {
     manualOverlay.classList.toggle('hidden');
     manual.classList.toggle('translate-x-full');
   };

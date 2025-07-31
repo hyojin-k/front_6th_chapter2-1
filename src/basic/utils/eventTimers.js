@@ -4,7 +4,7 @@ import { applyLightningDiscount, applySuggestDiscount } from './discountUtils';
 export const lightningSaleTimer = (onUpdateSelectOptions, doUpdatePricesInCart) => {
   const lightningDelay = Math.random() * TIMER_INTERVALS.LIGHTNING_DELAY;
   setTimeout(() => {
-    setInterval(function () {
+    setInterval(() => {
       const luckyIndex = Math.floor(Math.random() * PRODUCT_LIST.length);
       const luckyItem = PRODUCT_LIST[luckyIndex];
       if (luckyItem.quantity > 0 && !luckyItem.onSale) {
@@ -24,8 +24,8 @@ export const suggestSaleTimer = (
   lastSelectedProduct
 ) => {
   const suggestDelay = Math.random() * TIMER_INTERVALS.SUGGEST_DELAY;
-  setTimeout(function () {
-    setInterval(function () {
+  setTimeout(() => {
+    setInterval(() => {
       if (cartDisplay.children.length === 0) {
         return;
       }

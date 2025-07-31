@@ -32,7 +32,7 @@ function findLowStockItems(productList) {
 // 재고 메시지 생성
 export function getStockMessage(productList) {
   let stockMsg = '';
-  productList.forEach(function (item) {
+  productList.forEach((item) => {
     if (item.quantity < QUANTITY_THRESHOLDS.LOW_STOCK) {
       if (item.quantity > 0) {
         stockMsg += `${item.name}: 재고 부족 (${item.quantity}개 남음)\n`;

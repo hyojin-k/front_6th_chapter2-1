@@ -12,7 +12,7 @@ export function initCartClickHandler(
   onUpdateSelectOptions,
   PRODUCT_LIST
 ) {
-  cartContainer.addEventListener('click', function (event) {
+  cartContainer.addEventListener('click', (event) => {
     const targetElement = event.target;
 
     if (hasClass(targetElement, 'quantity-change') || hasClass(targetElement, 'remove-item')) {

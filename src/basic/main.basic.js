@@ -155,7 +155,7 @@ function setupEventListeners(domElements, appState) {
   );
 
   // 장바구니 추가 버튼 이벤트
-  domElements.addButton.addEventListener('click', function () {
+  domElements.addButton.addEventListener('click', () => {
     const result = addToCart(
       domElements.selectElement.value,
       domElements.cartDisplay,
