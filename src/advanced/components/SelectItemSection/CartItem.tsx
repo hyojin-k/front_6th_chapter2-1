@@ -5,15 +5,9 @@ export interface CartItemPropsType {
   item: CartItemType;
   onQuantityChange: (productId: string, change: number) => void;
   onRemoveItem: (productId: string) => void;
-  className?: string;
 }
 
-const CartItem: React.FC<CartItemPropsType> = ({
-  item,
-  onQuantityChange,
-  onRemoveItem,
-  className = '',
-}) => {
+const CartItem: React.FC<CartItemPropsType> = ({ item, onQuantityChange, onRemoveItem }) => {
   const handleQuantityChange = useCallback(
     (change: number) => {
       onQuantityChange(item.id, change);
@@ -46,7 +40,7 @@ const CartItem: React.FC<CartItemPropsType> = ({
   return (
     <div
       id={item.id}
-      className={`grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0 ${className}`}
+      className="grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0"
     >
       <div className="w-20 h-20 bg-gradient-black relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>

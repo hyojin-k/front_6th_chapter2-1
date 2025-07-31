@@ -4,15 +4,9 @@ export interface ManualOverlayPropsType {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  className?: string;
 }
 
-const ManualOverlay: React.FC<ManualOverlayPropsType> = ({
-  isOpen,
-  onClose,
-  children,
-  className = '',
-}) => {
+const ManualOverlay: React.FC<ManualOverlayPropsType> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -23,7 +17,7 @@ const ManualOverlay: React.FC<ManualOverlayPropsType> = ({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${className}`}
+      className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
       onClick={handleOverlayClick}
     >
       {children}

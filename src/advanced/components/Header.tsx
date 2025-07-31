@@ -1,13 +1,12 @@
 import React from 'react';
 
 export interface HeaderPropsType {
-  className?: string;
   itemCount?: number;
 }
 
-const Header: React.FC<HeaderPropsType> = ({ className = '', itemCount = 0 }) => {
+const Header: React.FC<HeaderPropsType> = ({ itemCount = 0 }) => {
   return (
-    <div className={`mb-8 ${className}`}>
+    <div className="mb-8">
       <h1 className="text-xs font-medium tracking-extra-wide uppercase mb-2">
         🛒 Hanghae Online Store
       </h1>

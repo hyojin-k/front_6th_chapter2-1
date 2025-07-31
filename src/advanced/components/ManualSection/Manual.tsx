@@ -3,16 +3,13 @@ import React from 'react';
 export interface ManualPropsType {
   isOpen: boolean;
   onClose: () => void;
-  className?: string;
 }
 
-const Manual: React.FC<ManualPropsType> = ({ isOpen, onClose, className = '' }) => {
+const Manual: React.FC<ManualPropsType> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform transition-transform duration-300 ${className}`}
-    >
+    <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform transition-transform duration-300">
       <button className="absolute top-4 right-4 text-gray-500 hover:text-black" onClick={onClose}>
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path

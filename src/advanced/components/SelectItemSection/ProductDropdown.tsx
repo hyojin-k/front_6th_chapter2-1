@@ -5,7 +5,6 @@ export interface ProductDropdownPropsType {
   value: string;
   onChange: (value: string) => void;
   products: ProductType[];
-  className?: string;
   disabled?: boolean;
 }
 
@@ -13,7 +12,6 @@ const ProductDropdown: React.FC<ProductDropdownPropsType> = ({
   value,
   onChange,
   products,
-  className = '',
   disabled = false,
 }) => {
   const generateProductName = (product: ProductType): string => {
@@ -66,7 +64,7 @@ const ProductDropdown: React.FC<ProductDropdownPropsType> = ({
       value={value}
       onChange={handleChange}
       disabled={disabled}
-      className={`w-full p-3 border border-gray-300 rounded-lg text-base mb-3 ${className}`}
+      className="w-full p-3 border border-gray-300 rounded-lg text-base mb-3"
     >
       {products.map((product) => (
         <option key={product.id} value={product.id} disabled={product.quantity === 0}>

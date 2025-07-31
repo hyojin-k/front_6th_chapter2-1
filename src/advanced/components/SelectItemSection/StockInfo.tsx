@@ -4,10 +4,9 @@ import { QUANTITY_THRESHOLDS } from '../../constants/product';
 
 export interface StockInfoPropsType {
   products: ProductType[];
-  className?: string;
 }
 
-const StockInfo: React.FC<StockInfoPropsType> = ({ products, className = '' }) => {
+const StockInfo: React.FC<StockInfoPropsType> = ({ products }) => {
   const getStockMessage = () => {
     let stockMsg = '';
     let hasLowStock = false;
@@ -35,7 +34,7 @@ const StockInfo: React.FC<StockInfoPropsType> = ({ products, className = '' }) =
   }
 
   return (
-    <div id="stock-status" className={`text-xs text-red-500 mt-3 whitespace-pre-line ${className}`}>
+    <div id="stock-status" className="text-xs text-red-500 mt-3 whitespace-pre-line">
       {message}
     </div>
   );

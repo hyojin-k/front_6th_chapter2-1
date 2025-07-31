@@ -6,25 +6,11 @@ export interface CartDisplayPropsType {
   items: CartItemType[];
   onQuantityChange: (productId: string, change: number) => void;
   onRemoveItem: (productId: string) => void;
-  className?: string;
 }
 
-const CartDisplay: React.FC<CartDisplayPropsType> = ({
-  items,
-  onQuantityChange,
-  onRemoveItem,
-  className = '',
-}) => {
-  if (items.length === 0) {
-    return (
-      <div id="cart-items" className={`text-center py-8 text-gray-500 ${className}`}>
-        장바구니가 비어있습니다.
-      </div>
-    );
-  }
-
+const CartDisplay: React.FC<CartDisplayPropsType> = ({ items, onQuantityChange, onRemoveItem }) => {
   return (
-    <div id="cart-items" className={className}>
+    <div id="cart-items">
       {items.map((item) => (
         <CartItem
           key={item.id}

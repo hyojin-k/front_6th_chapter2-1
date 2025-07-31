@@ -2,14 +2,11 @@ import React from 'react';
 
 export interface GridContainerPropsType {
   children: React.ReactNode;
-  className?: string;
 }
 
-const GridContainer: React.FC<GridContainerPropsType> = ({ children, className = '' }) => {
+const GridContainer: React.FC<GridContainerPropsType> = ({ children }) => {
   return (
-    <div
-      className={`grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-6 flex-1 overflow-hidden ${className}`}
-    >
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-6 flex-1 overflow-hidden">
       {children}
     </div>
   );
