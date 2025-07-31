@@ -20,7 +20,18 @@ const ProductDropdown: React.FC<ProductDropdownPropsType> = ({
   const formatProductOption = (product: ProductType) => {
     const productName = generateProductName(product);
     const price = generatePriceText(product);
-    return `${productName} - ${price}`;
+
+    // 할인 아이콘 추가
+    let discountIcon = '';
+    if (product.onSale && product.suggestSale) {
+      discountIcon = '⚡💝 '; // 번개세일 + 추천할인
+    } else if (product.onSale) {
+      discountIcon = '⚡ '; // 번개세일
+    } else if (product.suggestSale) {
+      discountIcon = '💝 '; // 추천할인
+    }
+
+    return `${discountIcon}${productName} - ${price}`;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

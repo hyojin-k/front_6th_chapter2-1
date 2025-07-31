@@ -4,7 +4,7 @@ import { PRODUCT_LIST } from '../constants';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
-  const [selectedProduct, setSelectedProduct] = useState<string>('p1');
+  const [selectedProduct, setSelectedProduct] = useState<string>('p1'); // 키보드로 초기 설정
 
   // 상품 선택
   const selectProduct = useCallback(
@@ -39,10 +39,25 @@ export const useProducts = () => {
       setProducts((prev) =>
         prev.map((product) => {
           if (product.id === productId) {
+            let newPrice = product.price;
+            let newOriginalPrice = product.originalPrice;
+
+            if (discountType === 'lightning') {
+              // 번개세일: 20% 할인
+              newPrice = Math.round(product.price * 0.8);
+              newOriginalPrice = product.price;
+            } else if (discountType === 'suggest') {
+              // 추천할인: 5% 할인
+              newPrice = Math.round(product.price * 0.95);
+              newOriginalPrice = product.price;
+            }
+
             return {
               ...product,
               onSale: discountType === 'lightning',
               suggestSale: discountType === 'suggest',
+              price: newPrice,
+              originalPrice: newOriginalPrice,
             };
           }
           return product;

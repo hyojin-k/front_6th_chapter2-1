@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { CalculationResultType, CartItemType } from '../../types';
 
 export interface OrderSummaryPropsType {
@@ -12,15 +12,15 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
   cartItems = [],
   className = '',
 }) => {
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return `₩${price.toLocaleString()}`;
-  };
+  }, []);
 
-  const formatDiscount = (discount: number) => {
+  const formatDiscount = useCallback((discount: number) => {
     return `${discount}%`;
-  };
+  }, []);
 
-  const buildCartItemsList = () => {
+  const buildCartItemsList = useCallback(() => {
     if (calculationResult.itemCount === 0) return '';
 
     return (
@@ -38,9 +38,9 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         })}
       </div>
     );
-  };
+  }, [cartItems, calculationResult.itemCount, formatPrice]);
 
-  const buildCartSubtotalHtml = () => {
+  const buildCartSubtotalHtml = useCallback(() => {
     if (calculationResult.subtotal === 0) return null;
 
     return (
@@ -52,43 +52,36 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         </div>
       </>
     );
-  };
+  }, [calculationResult.subtotal, formatPrice]);
 
-  const buildCartDiscountHtml = () => {
+  const buildCartDiscountHtml = useCallback(() => {
     if (calculationResult.itemDiscounts.length === 0 && !calculationResult.isTuesday) return null;
 
     return (
       <div className="space-y-2">
         {calculationResult.itemDiscounts.map((discount, index) => (
-          <div key={index} className="flex justify-between text-sm tracking-wide text-green-400">
-            <span>
-              {discount.name} ({formatDiscount(discount.discount)})
-            </span>
-            <span>-{formatPrice(calculationResult.subtotal - calculationResult.totalAmount)}</span>
+          <div
+            key={index}
+            className={`flex justify-between text-sm tracking-wide ${discount.color}`}
+          >
+            <span className="text-xs">{discount.name}</span>
+            <span className="text-xs">-{discount.rate}%</span>
           </div>
         ))}
-        {calculationResult.isTuesday && (
-          <div className="flex justify-between text-sm tracking-wide text-blue-400">
-            <span>Tuesday Special (10%)</span>
-            <span>
-              -{formatPrice(calculationResult.originalTotal - calculationResult.totalAmount)}
-            </span>
-          </div>
-        )}
       </div>
     );
-  };
+  }, [calculationResult.itemDiscounts, calculationResult.isTuesday]);
 
-  const buildCartShippingHtml = () => {
+  const buildCartShippingHtml = useCallback(() => {
     return (
       <div className="flex justify-between text-sm tracking-wide text-gray-400">
         <span>Shipping</span>
         <span>Free</span>
       </div>
     );
-  };
+  }, []);
 
-  const buildDiscountInfoHtml = () => {
+  const buildDiscountInfoHtml = useCallback(() => {
     if (calculationResult.discountRate === 0 || calculationResult.itemCount === 0) return null;
 
     const savedAmount = calculationResult.originalTotal - calculationResult.totalAmount;
@@ -105,9 +98,15 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         </div>
       </div>
     );
-  };
+  }, [
+    calculationResult.discountRate,
+    calculationResult.itemCount,
+    calculationResult.originalTotal,
+    calculationResult.totalAmount,
+    formatPrice,
+  ]);
 
-  const buildBonusPointsHtml = () => {
+  const buildBonusPointsHtml = useCallback(() => {
     if (calculationResult.bonusPoints.finalPoints === 0 || calculationResult.itemCount === 0) {
       return null;
     }
@@ -123,7 +122,15 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         </div>
       </div>
     );
-  };
+  }, [calculationResult.bonusPoints, calculationResult.itemCount]);
+
+  // 메모이제이션된 JSX 요소들
+  const cartItemsList = useMemo(() => buildCartItemsList(), [buildCartItemsList]);
+  const cartSubtotalHtml = useMemo(() => buildCartSubtotalHtml(), [buildCartSubtotalHtml]);
+  const cartDiscountHtml = useMemo(() => buildCartDiscountHtml(), [buildCartDiscountHtml]);
+  const cartShippingHtml = useMemo(() => buildCartShippingHtml(), [buildCartShippingHtml]);
+  const discountInfoHtml = useMemo(() => buildDiscountInfoHtml(), [buildDiscountInfoHtml]);
+  const bonusPointsHtml = useMemo(() => buildBonusPointsHtml(), [buildBonusPointsHtml]);
 
   return (
     <div className={`bg-black text-white p-8 flex flex-col ${className}`}>
@@ -132,16 +139,16 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         <div id="summary-details" className="space-y-3">
           {calculationResult.itemCount > 0 && (
             <>
-              {buildCartItemsList()}
-              {buildCartSubtotalHtml()}
-              {buildCartDiscountHtml()}
-              {buildCartShippingHtml()}
+              {cartItemsList}
+              {cartSubtotalHtml}
+              {cartDiscountHtml}
+              {cartShippingHtml}
             </>
           )}
         </div>
         <div className="mt-auto">
           <div id="discount-info" className="mb-4">
-            {buildDiscountInfoHtml()}
+            {discountInfoHtml}
           </div>
           <div id="cart-total" className="pt-5 border-t border-white/10">
             <div className="flex justify-between items-baseline">
@@ -151,7 +158,7 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
               </div>
             </div>
             <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
-              {buildBonusPointsHtml()}
+              {bonusPointsHtml}
             </div>
           </div>
           {calculationResult.isTuesday && calculationResult.totalAmount > 0 && (
@@ -176,4 +183,4 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
   );
 };
 
-export default OrderSummary;
+export default React.memo(OrderSummary);

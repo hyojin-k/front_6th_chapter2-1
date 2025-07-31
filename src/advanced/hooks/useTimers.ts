@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { CartItemType, ProductType } from '../types';
 import { PRODUCT_LIST } from '../constants';
 
@@ -9,87 +9,83 @@ export const useTimers = (
   lastSelectedProduct: string,
   onApplyDiscount: (productId: string, discountType: 'lightning' | 'suggest') => void
 ) => {
-  // 번개세일 타이머
-  const startLightningSaleTimer = useCallback(() => {
-    const randomDelay = Math.random() * 10000; // 0~10초
-    const lightningSaleTimer = setTimeout(() => {
-      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
-      if (availableProducts.length > 0) {
-        const randomProduct =
-          availableProducts[Math.floor(Math.random() * availableProducts.length)];
-        onApplyDiscount(randomProduct.id, 'lightning');
-        alert(`⚡ 번개세일! ${randomProduct.name} 20% 할인!`);
-      }
-    }, randomDelay);
+  // 타이머 참조를 저장하여 cleanup 시 사용
+  const timerRefs = useRef<{
+    lightningTimer?: NodeJS.Timeout;
+    suggestTimer?: NodeJS.Timeout;
+    lightningInterval?: NodeJS.Timeout;
+    suggestInterval?: NodeJS.Timeout;
+  }>({});
 
-    return lightningSaleTimer;
-  }, [onApplyDiscount]);
+  // 사용 가능한 상품 필터링 함수 (메모이제이션)
+  const getAvailableProducts = useCallback(() => {
+    return PRODUCT_LIST.filter((product) => product.quantity > 0);
+  }, []);
 
-  // 추천할인 타이머
-  const startSuggestSaleTimer = useCallback(() => {
-    const randomDelay = Math.random() * 20000; // 0~20초
-    const suggestSaleTimer = setTimeout(() => {
-      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
-      if (availableProducts.length > 0) {
-        const otherProducts = availableProducts.filter(
-          (product) => product.id !== lastSelectedProduct
-        );
-        if (otherProducts.length > 0) {
-          const randomProduct = otherProducts[Math.floor(Math.random() * otherProducts.length)];
-          onApplyDiscount(randomProduct.id, 'suggest');
-          alert(`💝 추천할인! ${randomProduct.name} 5% 추가 할인!`);
-        }
-      }
-    }, randomDelay);
+  // 랜덤 상품 선택 함수 (메모이제이션)
+  const selectRandomProduct = useCallback((products: ProductType[], excludeId?: string) => {
+    const availableProducts = excludeId
+      ? products.filter((product) => product.id !== excludeId)
+      : products;
 
-    return suggestSaleTimer;
-  }, [lastSelectedProduct, onApplyDiscount]);
+    if (availableProducts.length === 0) return null;
+
+    return availableProducts[Math.floor(Math.random() * availableProducts.length)];
+  }, []);
+
+  // 번개세일 실행 함수 (메모이제이션)
+  const executeLightningSale = useCallback(() => {
+    const availableProducts = getAvailableProducts();
+    const randomProduct = selectRandomProduct(availableProducts);
+
+    if (randomProduct) {
+      onApplyDiscount(randomProduct.id, 'lightning');
+      alert(`⚡ 번개세일! ${randomProduct.name} 20% 할인!`);
+    }
+  }, [getAvailableProducts, selectRandomProduct, onApplyDiscount]);
+
+  // 추천할인 실행 함수 (메모이제이션)
+  const executeSuggestSale = useCallback(() => {
+    const availableProducts = getAvailableProducts();
+    const randomProduct = selectRandomProduct(availableProducts, lastSelectedProduct);
+
+    if (randomProduct) {
+      onApplyDiscount(randomProduct.id, 'suggest');
+      alert(`💝 추천할인! ${randomProduct.name} 5% 추가 할인!`);
+    }
+  }, [getAvailableProducts, selectRandomProduct, lastSelectedProduct, onApplyDiscount]);
+
+  // 타이머 정리 함수
+  const clearAllTimers = useCallback(() => {
+    const { lightningTimer, suggestTimer, lightningInterval, suggestInterval } = timerRefs.current;
+
+    if (lightningTimer) clearTimeout(lightningTimer);
+    if (suggestTimer) clearTimeout(suggestTimer);
+    if (lightningInterval) clearInterval(lightningInterval);
+    if (suggestInterval) clearInterval(suggestInterval);
+
+    timerRefs.current = {};
+  }, []);
 
   useEffect(() => {
-    // 초기 타이머 시작
-    const lightningTimer = startLightningSaleTimer();
-    const suggestTimer = startSuggestSaleTimer();
+    // 이전 타이머들 정리
+    clearAllTimers();
 
-    // 30초마다 번개세일
-    const lightningInterval = setInterval(() => {
-      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
-      if (availableProducts.length > 0) {
-        const randomProduct =
-          availableProducts[Math.floor(Math.random() * availableProducts.length)];
-        onApplyDiscount(randomProduct.id, 'lightning');
-        alert(`⚡ 번개세일! ${randomProduct.name} 20% 할인!`);
-      }
-    }, 30000);
+    // 초기 타이머 시작 (랜덤 딜레이)
+    const lightningDelay = Math.random() * 10000; // 0~10초
+    const suggestDelay = Math.random() * 20000; // 0~20초
 
-    // 60초마다 추천할인
-    const suggestInterval = setInterval(() => {
-      const availableProducts = PRODUCT_LIST.filter((product) => product.quantity > 0);
-      if (availableProducts.length > 0) {
-        const otherProducts = availableProducts.filter(
-          (product) => product.id !== lastSelectedProduct
-        );
-        if (otherProducts.length > 0) {
-          const randomProduct = otherProducts[Math.floor(Math.random() * otherProducts.length)];
-          onApplyDiscount(randomProduct.id, 'suggest');
-          alert(`💝 추천할인! ${randomProduct.name} 5% 추가 할인!`);
-        }
-      }
-    }, 60000);
+    timerRefs.current.lightningTimer = setTimeout(executeLightningSale, lightningDelay);
+    timerRefs.current.suggestTimer = setTimeout(executeSuggestSale, suggestDelay);
+
+    // 주기적 타이머 설정
+    timerRefs.current.lightningInterval = setInterval(executeLightningSale, 30000);
+    timerRefs.current.suggestInterval = setInterval(executeSuggestSale, 60000);
 
     // 계산 결과 업데이트
     updateCalculation();
 
-    return () => {
-      clearTimeout(lightningTimer);
-      clearTimeout(suggestTimer);
-      clearInterval(lightningInterval);
-      clearInterval(suggestInterval);
-    };
-  }, [
-    startLightningSaleTimer,
-    startSuggestSaleTimer,
-    updateCalculation,
-    lastSelectedProduct,
-    onApplyDiscount,
-  ]);
+    // cleanup 함수
+    return clearAllTimers;
+  }, [executeLightningSale, executeSuggestSale, updateCalculation, clearAllTimers]);
 };

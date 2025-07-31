@@ -18,8 +18,10 @@ export interface CartItemType {
 
 // 할인 정보 타입
 export interface DiscountInfoType {
+  type: string;
   name: string;
-  discount: number;
+  rate: number;
+  color: string;
 }
 
 // 계산 결과 타입

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { CartItemType, ProductType, CalculationResultType } from '../types';
 import { calculateCartTotals } from '../utils/calculationUtils';
 
@@ -7,22 +7,24 @@ export const useCart = (
   updateProductStock: (productId: string, change: number) => void
 ) => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
-  const [calculationResult, setCalculationResult] = useState<CalculationResultType>({
-    totalAmount: 0,
-    itemCount: 0,
-    subtotal: 0,
-    originalTotal: 0,
-    itemDiscounts: [],
-    lowStockItems: [],
-    discountRate: 0,
-    isTuesday: false,
-    bonusPoints: { finalPoints: 0, pointsDetail: [] },
-  });
+
+  // 계산 결과를 메모이제이션
+  const calculationResult = useMemo(() => {
+    return calculateCartTotals(cartItems, products);
+  }, [cartItems, products]);
+
+  // 상품 찾기 함수 메모이제이션
+  const findProduct = useCallback(
+    (productId: string) => {
+      return products.find((p) => p.id === productId);
+    },
+    [products]
+  );
 
   // 장바구니에 상품 추가
   const addToCart = useCallback(
     (productId: string) => {
-      const product = products.find((p) => p.id === productId);
+      const product = findProduct(productId);
       if (!product) {
         alert('상품을 찾을 수 없습니다.');
         return false;
@@ -49,13 +51,13 @@ export const useCart = (
 
       return true;
     },
-    [products, updateProductStock]
+    [findProduct, updateProductStock]
   );
 
   // 장바구니 아이템 수량 변경
   const updateQuantity = useCallback(
     (productId: string, change: number) => {
-      const product = products.find((p) => p.id === productId);
+      const product = findProduct(productId);
       if (!product) return;
 
       setCartItems((prev) => {
@@ -86,7 +88,7 @@ export const useCart = (
         );
       });
     },
-    [products, updateProductStock]
+    [findProduct, updateProductStock]
   );
 
   // 장바구니 아이템 제거
@@ -104,11 +106,7 @@ export const useCart = (
     [updateProductStock]
   );
 
-  // 계산 결과 업데이트
-  const updateCalculation = useCallback(() => {
-    const result = calculateCartTotals(cartItems, products);
-    setCalculationResult(result);
-  }, [cartItems, products]);
+  const updateCalculation = useCallback(() => {}, []);
 
   return {
     cartItems,

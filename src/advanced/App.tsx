@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   Header,
   GridContainer,
@@ -34,13 +34,8 @@ const App: React.FC = () => {
   // 타이머 설정
   useTimers(updateProductList, updateCalculation, cartItems, selectedProduct, applyProductDiscount);
 
-  // 계산 결과 업데이트
-  useEffect(() => {
-    updateCalculation();
-  }, [cartItems, updateCalculation]);
-
-  // 장바구니에 상품 추가 핸들러
-  const handleAddToCart = () => {
+  // 장바구니에 상품 추가 핸들러 (메모이제이션)
+  const handleAddToCart = useCallback(() => {
     if (!selectedProduct) {
       alert('상품을 선택해주세요.');
       return;
@@ -50,22 +45,31 @@ const App: React.FC = () => {
     if (success) {
       // 성공적으로 추가된 경우 추가 로직이 필요하면 여기에 작성
     }
-  };
+  }, [selectedProduct, addToCart]);
 
-  // 장바구니 아이템 수량 변경 핸들러
-  const handleQuantityChange = (productId: string, change: number) => {
-    updateQuantity(productId, change);
-  };
+  // 장바구니 아이템 수량 변경 핸들러 (메모이제이션)
+  const handleQuantityChange = useCallback(
+    (productId: string, change: number) => {
+      updateQuantity(productId, change);
+    },
+    [updateQuantity]
+  );
 
-  // 장바구니 아이템 제거 핸들러
-  const handleRemoveItem = (productId: string) => {
-    removeItem(productId);
-  };
+  // 장바구니 아이템 제거 핸들러 (메모이제이션)
+  const handleRemoveItem = useCallback(
+    (productId: string) => {
+      removeItem(productId);
+    },
+    [removeItem]
+  );
 
-  // 상품 선택 핸들러
-  const handleProductSelect = (productId: string) => {
-    selectProduct(productId);
-  };
+  // 상품 선택 핸들러 (메모이제이션)
+  const handleProductSelect = useCallback(
+    (productId: string) => {
+      selectProduct(productId);
+    },
+    [selectProduct]
+  );
 
   return (
     <>
@@ -102,4 +106,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default React.memo(App);

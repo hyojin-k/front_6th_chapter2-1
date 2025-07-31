@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { CartItemType } from '../../types';
 import { generateProductName, generatePriceHtml } from '../../utils/priceUtils';
 
@@ -15,28 +15,34 @@ const CartItem: React.FC<CartItemPropsType> = ({
   onRemoveItem,
   className = '',
 }) => {
-  const handleQuantityChange = (change: number) => {
-    onQuantityChange(item.id, change);
-  };
+  const handleQuantityChange = useCallback(
+    (change: number) => {
+      onQuantityChange(item.id, change);
+    },
+    [item.id, onQuantityChange]
+  );
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
     onRemoveItem(item.id);
-  };
+  }, [item.id, onRemoveItem]);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return price.toLocaleString();
-  };
+  }, []);
 
-  const generatePriceHtml = (product: any, showDiscount = false) => {
-    if (showDiscount && product.originalPrice && product.originalPrice > product.price) {
+  const generatePriceHtml = useCallback(
+    (product: any, showDiscount = false) => {
+      if (showDiscount && product.originalPrice && product.originalPrice > product.price) {
+        return `${formatPrice(product.price)}원`;
+      }
       return `${formatPrice(product.price)}원`;
-    }
-    return `${formatPrice(product.price)}원`;
-  };
+    },
+    [formatPrice]
+  );
 
-  const generateProductName = (product: any) => {
+  const generateProductName = useCallback((product: any) => {
     return product.name;
-  };
+  }, []);
 
   return (
     <div
@@ -86,4 +92,4 @@ const CartItem: React.FC<CartItemPropsType> = ({
   );
 };
 
-export default CartItem;
+export default React.memo(CartItem);

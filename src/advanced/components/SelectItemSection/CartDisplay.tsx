@@ -37,4 +37,4 @@ const CartDisplay: React.FC<CartDisplayPropsType> = ({
   );
 };
 
-export default CartDisplay;
+export default React.memo(CartDisplay);
