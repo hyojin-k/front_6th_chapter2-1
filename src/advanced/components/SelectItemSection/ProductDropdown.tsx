@@ -1,6 +1,5 @@
 import React from 'react';
 import { ProductType } from '../../types';
-import { generateProductName, generatePriceText } from '../../utils/priceUtils';
 
 export interface ProductDropdownPropsType {
   value: string;
@@ -17,6 +16,21 @@ const ProductDropdown: React.FC<ProductDropdownPropsType> = ({
   className = '',
   disabled = false,
 }) => {
+  const generateProductName = (product: ProductType): string => {
+    return product.name;
+  };
+
+  const generatePriceText = (product: ProductType): string => {
+    const currentPrice = product.price;
+    const originalPrice = product.originalPrice;
+
+    if (currentPrice < originalPrice) {
+      return `₩${currentPrice.toLocaleString()} (할인)`;
+    }
+
+    return `₩${currentPrice.toLocaleString()}`;
+  };
+
   const formatProductOption = (product: ProductType) => {
     const productName = generateProductName(product);
     const price = generatePriceText(product);

@@ -1,5 +1,4 @@
 import React from 'react';
-import { calculateCartTotals } from '../../utils/calculationUtils';
 import { CalculationResultType, CartItemType, ProductType } from '../../types';
 
 export interface OrderSummaryPropsType {
@@ -10,6 +9,7 @@ export interface OrderSummaryPropsType {
 }
 
 const OrderSummary: React.FC<OrderSummaryPropsType> = ({
+  calculationResult,
   cartItems,
   productList,
   className = '',
@@ -25,13 +25,9 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
   // 디버깅을 위한 콘솔 로그
   console.log('OrderSummary - cartItems:', cartItems);
   console.log('OrderSummary - productList:', productList);
-
-  // basic 버전의 계산 로직 사용
-  const calculationResult: CalculationResultType = calculateCartTotals(cartItems, productList);
-
   console.log('OrderSummary - calculationResult:', calculationResult);
 
-  // 테스트용 기본값 설정
+  // props로 받은 calculationResult 사용
   const result = calculationResult || {
     totalAmount: 0,
     itemCount: 0,

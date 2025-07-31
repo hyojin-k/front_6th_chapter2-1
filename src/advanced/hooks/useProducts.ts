@@ -6,6 +6,81 @@ export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
   const [selectedProduct, setSelectedProduct] = useState<string>('p1'); // 키보드로 초기 설정
 
+  // 상품 아이콘 생성
+  const generateProductIcon = useCallback((product: ProductType): string => {
+    const icons = {
+      p1: '⌨️',
+      p2: '🖱️',
+      p3: '🖥️',
+      p4: '💼',
+      p5: '🔊',
+    };
+    return icons[product.id as keyof typeof icons] || '📦';
+  }, []);
+
+  // 가격 색상 결정
+  const getPriceColor = useCallback((product: ProductType): string => {
+    if (product.onSale && product.suggestSale) {
+      return 'text-purple-600 font-bold'; // 번개세일 + 추천할인
+    } else if (product.onSale) {
+      return 'text-red-600 font-bold'; // 번개세일
+    } else if (product.suggestSale) {
+      return 'text-blue-600 font-bold'; // 추천할인
+    }
+    return 'text-black';
+  }, []);
+
+  // 가격 HTML 생성
+  const generatePriceHtml = useCallback(
+    (product: ProductType): string => {
+      const priceColor = getPriceColor(product);
+      const currentPrice = product.price;
+      const originalPrice = product.originalPrice;
+
+      if (currentPrice < originalPrice) {
+        return `
+        <span class="${priceColor}">₩${currentPrice.toLocaleString()}</span>
+        <span class="text-gray-500 line-through text-sm">₩${originalPrice.toLocaleString()}</span>
+      `;
+      }
+
+      return `<span class="${priceColor}">₩${currentPrice.toLocaleString()}</span>`;
+    },
+    [getPriceColor]
+  );
+
+  // 상품명 생성
+  const generateProductName = useCallback((product: ProductType): string => {
+    return product.name;
+  }, []);
+
+  // 가격 텍스트 생성
+  const generatePriceText = useCallback((product: ProductType): string => {
+    const currentPrice = product.price;
+    const originalPrice = product.originalPrice;
+
+    if (currentPrice < originalPrice) {
+      return `₩${currentPrice.toLocaleString()} (할인)`;
+    }
+
+    return `₩${currentPrice.toLocaleString()}`;
+  }, []);
+
+  // 할인 여부 확인
+  const hasDiscount = useCallback((product: ProductType): boolean => {
+    return product.price < product.originalPrice;
+  }, []);
+
+  // 원가 가져오기
+  const getOriginalPrice = useCallback((product: ProductType): number => {
+    return product.originalPrice;
+  }, []);
+
+  // 현재 가격 가져오기
+  const getCurrentPrice = useCallback((product: ProductType): number => {
+    return product.price;
+  }, []);
+
   // 상품 선택
   const selectProduct = useCallback(
     (productId: string) => {
@@ -74,5 +149,14 @@ export const useProducts = () => {
     updateProductList,
     updateProductStock,
     applyProductDiscount,
+    // 가격 관련 함수들도 외부에서 사용할 수 있도록 노출
+    generateProductIcon,
+    getPriceColor,
+    generatePriceHtml,
+    generateProductName,
+    generatePriceText,
+    hasDiscount,
+    getOriginalPrice,
+    getCurrentPrice,
   };
 };
