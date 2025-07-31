@@ -6,6 +6,7 @@ export const useTimers = (
   updateProductList: (newProductList: ProductType[]) => void,
   updateCalculation: () => void,
   cartItems: CartItemType[],
+  selectedProduct: string,
   lastSelectedProduct: string,
   onApplyDiscount: (productId: string, discountType: 'lightning' | 'suggest') => void
 ) => {

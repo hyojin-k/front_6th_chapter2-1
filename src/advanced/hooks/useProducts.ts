@@ -4,7 +4,8 @@ import { PRODUCT_LIST } from '../constants';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<string>('p1'); // 키보드로 기본값 설정
+  const [lastSelectedProduct, setLastSelectedProduct] = useState<string>('p1'); // 마지막 선택된 상품
 
   // 가격 색상 결정
   const getPriceColor = useCallback((product: ProductType): string => {
@@ -54,10 +55,11 @@ export const useProducts = () => {
     (productId: string) => {
       const product = products.find((p) => p.id === productId);
       if (product && product.quantity > 0) {
+        setLastSelectedProduct(selectedProduct); // 이전 선택을 저장
         setSelectedProduct(productId);
       }
     },
-    [products]
+    [products, selectedProduct]
   );
 
   // 상품 목록 업데이트
@@ -176,6 +178,7 @@ export const useProducts = () => {
   return {
     products,
     selectedProduct,
+    lastSelectedProduct,
     getPriceColor,
     generateProductName,
     generatePriceText,

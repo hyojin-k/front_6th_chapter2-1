@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const {
     products,
     selectedProduct,
+    lastSelectedProduct,
     selectProduct,
     updateProductList,
     applyProductDiscount,
@@ -32,15 +33,17 @@ const App: React.FC = () => {
   const { isManualOpen, openManual, closeManual } = useManual();
 
   // 타이머 설정
-  useTimers(updateProductList, updateCalculation, cartItems, selectedProduct, applyProductDiscount);
+  useTimers(
+    updateProductList,
+    updateCalculation,
+    cartItems,
+    selectedProduct,
+    lastSelectedProduct,
+    applyProductDiscount
+  );
 
   // 장바구니에 상품 추가 핸들러 (메모이제이션)
   const handleAddToCart = useCallback(() => {
-    if (!selectedProduct) {
-      alert('상품을 선택해주세요.');
-      return;
-    }
-
     const success = addToCart(selectedProduct);
     if (success) {
       // 성공적으로 추가된 경우 추가 로직이 필요하면 여기에 작성
