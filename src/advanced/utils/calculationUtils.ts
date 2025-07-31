@@ -12,6 +12,7 @@ import {
   CalculationResultType,
   BonusPointsInfoType,
   ProductCountsType,
+  DiscountInfoType,
 } from '../types';
 
 /**
@@ -95,24 +96,24 @@ function calculateCartItemTotals(cartItems: CartItemType[], productList: Product
           : null,
       };
     })
-    .filter((item) => item !== null);
+    .filter((item) => item !== null) as Array<{
+    quantity: number;
+    itemTotal: number;
+    discountedTotal: number;
+    discount: { name: string; discount: number } | null;
+  }>;
 
   return itemCalculations.reduce(
-    (acc, item) => {
-      if (item) {
-        acc.totalAmount += item.discountedTotal;
-        acc.subtotal += item.itemTotal;
-        acc.itemCount += item.quantity;
-        if (item.discount) {
-          acc.itemDiscounts.push(item.discount);
-        }
-      }
-      return acc;
-    },
+    (acc, item) => ({
+      totalAmount: acc.totalAmount + item.discountedTotal,
+      itemCount: acc.itemCount + item.quantity,
+      subtotal: acc.subtotal + item.itemTotal,
+      itemDiscounts: item.discount ? [...acc.itemDiscounts, item.discount] : acc.itemDiscounts,
+    }),
     {
       totalAmount: 0,
-      subtotal: 0,
       itemCount: 0,
+      subtotal: 0,
       itemDiscounts: [] as Array<{ name: string; discount: number }>,
     }
   );
@@ -132,15 +133,20 @@ function calculateIndividualDiscount(product: ProductType, quantity: number) {
   return { applicable, rate };
 }
 
-// 대량 할인 적용
+// 대량 구매 할인 적용 (래퍼 함수) - basic 버전 로직 적용
 function applyBulkDiscount(totalAmount: number, subtotal: number, itemCount: number) {
   const bulkDiscount = calculateBulkDiscount(itemCount, subtotal);
-  const finalAmount = bulkDiscount.applicable ? bulkDiscount.finalAmount : totalAmount;
 
-  return {
-    finalAmount,
-    discountRate: bulkDiscount.rate,
-  };
+  if (bulkDiscount.applicable) {
+    return {
+      finalAmount: bulkDiscount.finalAmount,
+      discountRate: bulkDiscount.rate,
+    };
+  }
+
+  // 기존 개별 할인율 계산
+  const individualDiscountRate = (subtotal - totalAmount) / subtotal;
+  return { finalAmount: totalAmount, discountRate: individualDiscountRate };
 }
 
 // 대량 할인 계산
@@ -166,16 +172,22 @@ function calculateBulkDiscount(itemCount: number, subtotal: number) {
   return { applicable, rate, finalAmount };
 }
 
-// 화요일 할인 적용
+// 화요일 할인 적용 (래퍼 함수) - basic 버전 로직 적용
 function applyTuesdayDiscount(totalAmount: number, originalTotal: number) {
   const tuesdayDiscount = calculateTuesdayDiscount(totalAmount);
-  const finalAmount = tuesdayDiscount.applicable ? tuesdayDiscount.finalAmount : totalAmount;
 
-  return {
-    finalAmount,
-    discountRate: tuesdayDiscount.applicable ? 0.1 : 0,
-    isTuesday: tuesdayDiscount.isTuesday,
-  };
+  if (tuesdayDiscount.applicable) {
+    const discountRate = 1 - tuesdayDiscount.finalAmount / originalTotal;
+    return {
+      finalAmount: tuesdayDiscount.finalAmount,
+      discountRate,
+      isTuesday: tuesdayDiscount.isTuesday,
+    };
+  }
+
+  // 화요일이 아닌 경우
+  const discountRate = (originalTotal - totalAmount) / originalTotal;
+  return { finalAmount: totalAmount, discountRate, isTuesday: tuesdayDiscount.isTuesday };
 }
 
 // 화요일 할인 계산
@@ -222,6 +234,7 @@ function generateDiscountInfo(
   return discountInfo;
 }
 
+// 장바구니 총합 계산 (메인 함수) - basic 버전 로직 적용
 export function calculateCartTotals(
   cartItems: CartItemType[],
   productList: ProductType[]
@@ -237,16 +250,6 @@ export function calculateCartTotals(
   );
   const tuesdayDiscountResult = applyTuesdayDiscount(bulkDiscountResult.finalAmount, originalTotal);
 
-  // 할인 정보 생성 (실제 계산된 값 기반)
-  const discountInfo = generateDiscountInfo(
-    itemTotals.itemCount,
-    itemTotals.itemDiscounts,
-    tuesdayDiscountResult.isTuesday,
-    bulkDiscountResult.finalAmount,
-    originalTotal,
-    tuesdayDiscountResult.finalAmount
-  );
-
   // 보너스 포인트도 함께 계산하여 중복 계산 방지
   const bonusPoints = calculateBonusPoints(
     cartItems,
@@ -255,19 +258,24 @@ export function calculateCartTotals(
     productList
   );
 
-  const result: CalculationResultType = {
+  const itemDiscounts: DiscountInfoType[] = itemTotals.itemDiscounts.map((discount) => ({
+    type: 'individual',
+    name: discount.name,
+    rate: discount.discount / 100,
+    color: 'blue',
+  }));
+
+  return {
     totalAmount: tuesdayDiscountResult.finalAmount,
     itemCount: itemTotals.itemCount,
     subtotal: itemTotals.subtotal,
     originalTotal,
-    itemDiscounts: discountInfo,
+    itemDiscounts,
     lowStockItems,
     discountRate: tuesdayDiscountResult.discountRate,
     isTuesday: tuesdayDiscountResult.isTuesday,
     bonusPoints,
   };
-
-  return result;
 }
 
 /**
