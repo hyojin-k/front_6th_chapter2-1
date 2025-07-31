@@ -44,11 +44,8 @@ export const suggestSaleTimer = (
 
 // 추천 가능한 상품 찾기
 function findSuggestableProduct(lastSelectedProductId) {
-  for (let productIndex = 0; productIndex < PRODUCT_LIST.length; productIndex++) {
-    const product = PRODUCT_LIST[productIndex];
-    if (product.id !== lastSelectedProductId && product.quantity > 0 && !product.suggestSale) {
-      return product;
-    }
-  }
-  return null;
+  return PRODUCT_LIST.find(
+    (product) =>
+      product.id !== lastSelectedProductId && product.quantity > 0 && !product.suggestSale
+  );
 }
