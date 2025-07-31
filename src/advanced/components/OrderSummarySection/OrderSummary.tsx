@@ -1,19 +1,15 @@
 import React from 'react';
-import { CalculationResultType, CartItemType, ProductType } from '../../types';
+import { CalculationResultType } from '../../types';
+import { useDiscount } from '../../hooks/useDiscount';
 
 export interface OrderSummaryPropsType {
   calculationResult: CalculationResultType;
-  cartItems: CartItemType[];
-  productList: ProductType[];
-  className?: string;
 }
 
-const OrderSummary: React.FC<OrderSummaryPropsType> = ({
-  calculationResult,
-  cartItems,
-  productList,
-  className = '',
-}) => {
+const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult }) => {
+  const { calculateDiscountRate, calculateDiscountAmount, generateOrderSummaryDiscountInfo } =
+    useDiscount();
+
   const formatPrice = (price: number) => {
     return `₩${price.toLocaleString()}`;
   };
@@ -22,12 +18,6 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
     return `${discount}%`;
   };
 
-  // 디버깅을 위한 콘솔 로그
-  console.log('OrderSummary - cartItems:', cartItems);
-  console.log('OrderSummary - productList:', productList);
-  console.log('OrderSummary - calculationResult:', calculationResult);
-
-  // props로 받은 calculationResult 사용
   const result = calculationResult || {
     totalAmount: 0,
     itemCount: 0,
@@ -40,49 +30,13 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
     bonusPoints: { finalPoints: 0, pointsDetail: [] },
   };
 
-  // 총 할인율 계산
-  const totalDiscountRate =
-    result.subtotal > 0 ? ((result.subtotal - result.totalAmount) / result.subtotal) * 100 : 0;
-  const totalDiscountAmount = result.subtotal - result.totalAmount;
-
-  // basic 버전의 할인 정보 생성 로직 적용
-  const generateDiscountInfo = () => {
-    const discounts: Array<{ name: string; rate: number; color: string }> = [];
-
-    // 대량 구매 할인 (30개 이상)
-    if (result.itemCount >= 30) {
-      discounts.push({
-        name: '🎉 대량구매 할인 (30개 이상)',
-        rate: 25,
-        color: 'text-green-400',
-      });
-    } else if (result.itemDiscounts.length > 0) {
-      // 개별 상품 할인 (10개 이상)
-      result.itemDiscounts.forEach((item) => {
-        discounts.push({
-          name: `${item.name} (10개↑)`,
-          rate: item.rate * 100,
-          color: 'text-green-400',
-        });
-      });
-    }
-
-    // 화요일 할인
-    if (result.isTuesday && result.totalAmount > 0) {
-      discounts.push({
-        name: '🌟 화요일 추가 할인',
-        rate: 10,
-        color: 'text-purple-400',
-      });
-    }
-
-    return discounts;
-  };
-
-  const discountInfo = generateDiscountInfo();
+  // 커스텀 훅을 사용하여 할인 정보 계산
+  const totalDiscountRate = calculateDiscountRate(result.subtotal, result.totalAmount);
+  const totalDiscountAmount = calculateDiscountAmount(result.subtotal, result.totalAmount);
+  const discountInfo = generateOrderSummaryDiscountInfo(result);
 
   return (
-    <div className={`bg-black text-white p-8 flex flex-col ${className}`}>
+    <div className="bg-black text-white p-8 flex flex-col">
       <h2 className="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
       <div className="flex-1 flex flex-col">
         <div id="summary-details" className="space-y-3">
@@ -98,7 +52,7 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
           </div>
         </div>
 
-        {/* 총 할인율 영역 (녹색 박스) */}
+        {/* 총 할인율 영역 */}
         {totalDiscountRate > 0 && (
           <div className="mt-4 p-3 bg-green-600 rounded-lg">
             <div className="flex justify-between items-center mb-1">
@@ -110,7 +64,7 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
         )}
 
         <div className="mt-auto">
-          {/* 할인 내역 상세 표시 - basic 버전과 동일한 구조 */}
+          {/* 할인 내역 상세 표시 */}
           {discountInfo.length > 0 && (
             <div id="discount-info" className="mb-4">
               <div className="space-y-2">

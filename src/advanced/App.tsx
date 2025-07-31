@@ -94,11 +94,7 @@ const App: React.FC = () => {
           />
         </SelectItem>
 
-        <OrderSummary
-          calculationResult={calculationResult}
-          cartItems={cartItems}
-          productList={products}
-        />
+        <OrderSummary calculationResult={calculationResult} />
       </GridContainer>
 
       <ManualToggle onToggle={openManual} />

@@ -23,16 +23,6 @@ const CartItem: React.FC<CartItemPropsType> = ({ item, onQuantityChange, onRemov
     return price.toLocaleString();
   }, []);
 
-  const generatePriceHtml = useCallback(
-    (product: any, showDiscount = false) => {
-      if (showDiscount && product.originalPrice && product.originalPrice > product.price) {
-        return `${formatPrice(product.price)}원`;
-      }
-      return `${formatPrice(product.price)}원`;
-    },
-    [formatPrice]
-  );
-
   const generateProductName = useCallback((product: any) => {
     return product.name;
   }, []);
@@ -50,7 +40,14 @@ const CartItem: React.FC<CartItemPropsType> = ({ item, onQuantityChange, onRemov
           {generateProductName(item.product)}
         </h3>
         <p className="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>
-        <p className="text-xs text-black mb-3">{generatePriceHtml(item.product, true)}</p>
+        <p className="text-xs text-black mb-3">
+          ₩{formatPrice(item.product.price)}
+          {item.product.originalPrice && item.product.originalPrice > item.product.price && (
+            <span className="text-gray-500 line-through ml-2">
+              ₩{formatPrice(item.product.originalPrice)}
+            </span>
+          )}
+        </p>
         <div className="flex items-center gap-4">
           <button
             className="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white"
@@ -72,7 +69,12 @@ const CartItem: React.FC<CartItemPropsType> = ({ item, onQuantityChange, onRemov
       </div>
       <div className="text-right">
         <div className="text-lg mb-2 tracking-tight tabular-nums">
-          {generatePriceHtml(item.product, true)}
+          ₩{formatPrice(item.product.price)}
+          {item.product.originalPrice && item.product.originalPrice > item.product.price && (
+            <span className="text-gray-500 line-through ml-2">
+              ₩{formatPrice(item.product.originalPrice)}
+            </span>
+          )}
         </div>
         <button
           className="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black"

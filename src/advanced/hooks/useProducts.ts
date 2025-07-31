@@ -4,50 +4,18 @@ import { PRODUCT_LIST } from '../constants';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
-  const [selectedProduct, setSelectedProduct] = useState<string>('p1'); // 키보드로 초기 설정
-
-  // 상품 아이콘 생성
-  const generateProductIcon = useCallback((product: ProductType): string => {
-    const icons = {
-      p1: '⌨️',
-      p2: '🖱️',
-      p3: '🖥️',
-      p4: '💼',
-      p5: '🔊',
-    };
-    return icons[product.id as keyof typeof icons] || '📦';
-  }, []);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
   // 가격 색상 결정
   const getPriceColor = useCallback((product: ProductType): string => {
-    if (product.onSale && product.suggestSale) {
-      return 'text-purple-600 font-bold'; // 번개세일 + 추천할인
-    } else if (product.onSale) {
-      return 'text-red-600 font-bold'; // 번개세일
-    } else if (product.suggestSale) {
-      return 'text-blue-600 font-bold'; // 추천할인
+    if (product.onSale) {
+      return 'text-red-500';
+    }
+    if (product.suggestSale) {
+      return 'text-blue-500';
     }
     return 'text-black';
   }, []);
-
-  // 가격 HTML 생성
-  const generatePriceHtml = useCallback(
-    (product: ProductType): string => {
-      const priceColor = getPriceColor(product);
-      const currentPrice = product.price;
-      const originalPrice = product.originalPrice;
-
-      if (currentPrice < originalPrice) {
-        return `
-        <span class="${priceColor}">₩${currentPrice.toLocaleString()}</span>
-        <span class="text-gray-500 line-through text-sm">₩${originalPrice.toLocaleString()}</span>
-      `;
-      }
-
-      return `<span class="${priceColor}">₩${currentPrice.toLocaleString()}</span>`;
-    },
-    [getPriceColor]
-  );
 
   // 상품명 생성
   const generateProductName = useCallback((product: ProductType): string => {
@@ -129,10 +97,10 @@ export const useProducts = () => {
 
             return {
               ...product,
-              onSale: discountType === 'lightning',
-              suggestSale: discountType === 'suggest',
               price: newPrice,
               originalPrice: newOriginalPrice,
+              onSale: discountType === 'lightning',
+              suggestSale: discountType === 'suggest',
             };
           }
           return product;
@@ -142,21 +110,90 @@ export const useProducts = () => {
     []
   );
 
+  // 상품 할인 해제
+  const removeProductDiscount = useCallback((productId: string) => {
+    setProducts((prev) =>
+      prev.map((product) => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            price: product.originalPrice,
+            onSale: false,
+            suggestSale: false,
+          };
+        }
+        return product;
+      })
+    );
+  }, []);
+
+  // 상품 찾기
+  const findProductById = useCallback(
+    (productId: string): ProductType | undefined => {
+      return products.find((product) => product.id === productId);
+    },
+    [products]
+  );
+
+  // 상품 목록 가져오기
+  const getProductList = useCallback((): ProductType[] => {
+    return products;
+  }, [products]);
+
+  // 선택된 상품 가져오기
+  const getSelectedProduct = useCallback((): ProductType | null => {
+    if (!selectedProduct) return null;
+    return products.find((product) => product.id === selectedProduct) || null;
+  }, [selectedProduct, products]);
+
+  // 상품 추가
+  const addProduct = useCallback((newProduct: ProductType) => {
+    setProducts((prev) => [...prev, newProduct]);
+  }, []);
+
+  // 상품 삭제
+  const removeProduct = useCallback((productId: string) => {
+    setProducts((prev) => prev.filter((product) => product.id !== productId));
+  }, []);
+
+  // 상품 업데이트
+  const updateProduct = useCallback((productId: string, updates: Partial<ProductType>) => {
+    setProducts((prev) =>
+      prev.map((product) => (product.id === productId ? { ...product, ...updates } : product))
+    );
+  }, []);
+
+  // 재고 부족 상품 찾기
+  const findLowStockProducts = useCallback((): ProductType[] => {
+    return products.filter((product) => product.quantity <= 5);
+  }, [products]);
+
+  // 할인 상품 찾기
+  const findDiscountedProducts = useCallback((): ProductType[] => {
+    return products.filter((product) => product.onSale || product.suggestSale);
+  }, [products]);
+
   return {
     products,
     selectedProduct,
-    selectProduct,
-    updateProductList,
-    updateProductStock,
-    applyProductDiscount,
-    // 가격 관련 함수들도 외부에서 사용할 수 있도록 노출
-    generateProductIcon,
     getPriceColor,
-    generatePriceHtml,
     generateProductName,
     generatePriceText,
     hasDiscount,
     getOriginalPrice,
     getCurrentPrice,
+    selectProduct,
+    updateProductList,
+    updateProductStock,
+    applyProductDiscount,
+    removeProductDiscount,
+    findProductById,
+    getProductList,
+    getSelectedProduct,
+    addProduct,
+    removeProduct,
+    updateProduct,
+    findLowStockProducts,
+    findDiscountedProducts,
   };
 };
