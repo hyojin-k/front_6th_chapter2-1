@@ -23,6 +23,7 @@ import {
   getQuantity,
   updatePriceDisplay,
 } from './domHelpers';
+import { STOCK_THRESHOLDS, QUANTITY_THRESHOLDS } from '../constants';
 
 /**
  * 상품 선택 관련 UI 업데이트 함수들
@@ -36,7 +37,7 @@ export function updateSelectOptions(selectElement, productList, ProductDropdownO
 
   productList.map(ProductDropdownOptions).forEach((option) => appendElement(selectElement, option));
 
-  const borderColor = totalStock < 50 ? 'orange' : '';
+  const borderColor = totalStock < STOCK_THRESHOLDS.WARNING_LEVEL ? 'orange' : '';
   setBorderColor(selectElement, borderColor);
 }
 
@@ -261,7 +262,7 @@ function updateCartItemStyles(cartElement, productList) {
       const priceElements = findElements(cartItem, '.text-lg, .text-xs');
       priceElements.forEach((element) => {
         if (hasClass(element, 'text-lg')) {
-          const fontWeight = quantity >= 10 ? 'bold' : 'normal';
+          const fontWeight = quantity >= QUANTITY_THRESHOLDS.BULK_DISCOUNT ? 'bold' : 'normal';
           setFontWeight(element, fontWeight);
         }
       });

@@ -1,4 +1,4 @@
-import { DISCOUNT_RATES, QUANTITY_THRESHOLDS } from '../constants';
+import { DISCOUNT_RATES, QUANTITY_THRESHOLDS, WEEKDAYS } from '../constants';
 
 // 할인 타입 상수
 export const DISCOUNT_TYPES = {
@@ -40,7 +40,7 @@ export function calculateBulkDiscount(itemCount, subtotal) {
 // 화요일 할인 계산
 export function calculateTuesdayDiscount(totalAmount) {
   const today = new Date();
-  const isTuesday = today.getDay() === 2;
+  const isTuesday = today.getDay() === WEEKDAYS.TUESDAY;
 
   if (isTuesday && totalAmount > 0) {
     const discountRate = DISCOUNT_RATES.TUESDAY;

@@ -30,12 +30,22 @@ export const QUANTITY_THRESHOLDS = {
 // 포인트 적립 상수
 export const POINT_RATES = {
   DEFAULT: 0.001,
-  TUESDAY: 2,
+  TUESDAY_MULTIPLIER: 2,
   SET_KEYBOARD_MOUSE: 50,
   SET_KEYBOARD_MOUSE_MONITOR_ARM: 100,
   BULK_10: 20,
   BULK_20: 50,
   BULK_30: 100,
+};
+
+// 요일 상수
+export const WEEKDAYS = {
+  TUESDAY: 2,
+};
+
+// 재고 임계값 상수
+export const STOCK_THRESHOLDS = {
+  WARNING_LEVEL: 50,
 };
 
 // 타이머 상수

@@ -4,7 +4,14 @@ import {
   calculateBulkDiscount,
   calculateTuesdayDiscount,
 } from './discountUtils';
-import { KEYBOARD, MOUSE, MONITOR_ARM, QUANTITY_THRESHOLDS, POINT_RATES } from '../constants';
+import {
+  KEYBOARD,
+  MOUSE,
+  MONITOR_ARM,
+  QUANTITY_THRESHOLDS,
+  POINT_RATES,
+  WEEKDAYS,
+} from '../constants';
 
 /**
  * 재고 관련 함수들
@@ -18,7 +25,7 @@ export function getTotalStock(productList) {
 // 재고 부족 상품 확인
 function findLowStockItems(productList) {
   return productList
-    .filter((product) => product.quantity < 5 && product.quantity > 0)
+    .filter((product) => product.quantity < QUANTITY_THRESHOLDS.LOW_STOCK && product.quantity > 0)
     .map((product) => product.name);
 }
 
@@ -181,9 +188,9 @@ export function calculateBonusPoints(cartItems, totalAmount, itemCount, productL
   }
 
   // 화요일 2배 포인트
-  if (new Date().getDay() === 2) {
+  if (new Date().getDay() === WEEKDAYS.TUESDAY) {
     if (basePoints > 0) {
-      finalPoints = basePoints * POINT_RATES.TUESDAY;
+      finalPoints = basePoints * POINT_RATES.TUESDAY_MULTIPLIER;
       pointsDetail.push('화요일 2배');
     }
   }
