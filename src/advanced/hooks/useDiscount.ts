@@ -2,15 +2,6 @@ import { useCallback } from 'react';
 import { DISCOUNT_RATES, QUANTITY_THRESHOLDS, WEEKDAYS } from '../constants';
 import { ProductType, CalculationResultType } from '../types';
 
-// 할인 타입 상수
-export const DISCOUNT_TYPES = {
-  INDIVIDUAL: 'individual',
-  BULK: 'bulk',
-  TUESDAY: 'tuesday',
-  LIGHTNING: 'lightning',
-  SUGGEST: 'suggest',
-} as const;
-
 export const useDiscount = () => {
   // 개별 상품 할인 계산
   const calculateIndividualDiscount = useCallback((product: ProductType, quantity: number) => {
@@ -108,7 +99,7 @@ export const useDiscount = () => {
       // 대량 구매 할인
       if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
         discounts.push({
-          type: DISCOUNT_TYPES.BULK,
+          type: 'bulk',
           name: '🎉 대량구매 할인 (30개 이상)',
           rate: DISCOUNT_RATES.BULK * 100,
           color: 'text-green-400',
@@ -117,7 +108,7 @@ export const useDiscount = () => {
         // 개별 상품 할인
         itemDiscounts.forEach((item) => {
           discounts.push({
-            type: DISCOUNT_TYPES.INDIVIDUAL,
+            type: 'individual',
             name: `${item.name} (10개↑)`,
             rate: item.discount,
             color: 'text-green-400',
@@ -128,7 +119,7 @@ export const useDiscount = () => {
       // 화요일 할인
       if (isTuesday) {
         discounts.push({
-          type: DISCOUNT_TYPES.TUESDAY,
+          type: 'tuesday',
           name: '🎉 화요일 특별 할인',
           rate: DISCOUNT_RATES.TUESDAY * 100,
           color: 'text-blue-400',
@@ -205,6 +196,5 @@ export const useDiscount = () => {
     calculateDiscountAmount,
     isDiscountApplicable,
     calculateFinalAmount,
-    DISCOUNT_TYPES,
   };
 };
