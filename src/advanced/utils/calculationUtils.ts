@@ -16,35 +16,32 @@ export const calculateIndividualDiscount = (product: ProductType, quantity: numb
 
 // 대량 구매 할인 계산
 export const calculateBulkDiscount = (itemCount: number, subtotal: number) => {
-  if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-    const discountRate = DISCOUNT_RATES.BULK;
-    const discountedTotal = subtotal * (1 - discountRate);
-    return {
-      rate: discountRate,
-      amount: subtotal - discountedTotal,
-      finalAmount: discountedTotal,
-      applicable: true,
-    };
-  } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
-    const discountRate = 0.2;
-    const discountedTotal = subtotal * 0.8;
-    return {
-      rate: discountRate,
-      amount: subtotal - discountedTotal,
-      finalAmount: discountedTotal,
-      applicable: true,
-    };
-  } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
-    const discountRate = 0.1;
-    const discountedTotal = subtotal * 0.9;
-    return {
-      rate: discountRate,
-      amount: subtotal - discountedTotal,
-      finalAmount: discountedTotal,
-      applicable: true,
-    };
+  const discountConfig = getBulkDiscountConfig(itemCount);
+  if (!discountConfig) {
+    return { rate: 0, amount: 0, finalAmount: subtotal, applicable: false };
   }
-  return { rate: 0, amount: 0, finalAmount: subtotal, applicable: false };
+
+  const discountedTotal = subtotal * (1 - discountConfig.rate);
+  return {
+    rate: discountConfig.rate,
+    amount: subtotal - discountedTotal,
+    finalAmount: discountedTotal,
+    applicable: true,
+  };
+};
+
+// 대량 할인 설정 가져오기
+const getBulkDiscountConfig = (itemCount: number) => {
+  if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
+    return { rate: DISCOUNT_RATES.BULK };
+  }
+  if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
+    return { rate: 0.2 };
+  }
+  if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
+    return { rate: 0.1 };
+  }
+  return null;
 };
 
 // 화요일 할인 계산

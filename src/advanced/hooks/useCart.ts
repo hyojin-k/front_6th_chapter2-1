@@ -227,23 +227,29 @@ export const useCart = (
   // 대량 구매 보너스 포인트 계산
   const calculateBulkPurchaseBonus = useCallback(
     (itemCount: number, pointsDetail: string[]): number => {
-      let bonusPoints = 0;
-
-      if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-        bonusPoints += POINT_RATES.BULK_30;
-        pointsDetail.push('대량구매 [30개+]');
-      } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
-        bonusPoints += POINT_RATES.BULK_20;
-        pointsDetail.push('대량구매 [20개+]');
-      } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
-        bonusPoints += POINT_RATES.BULK_10;
-        pointsDetail.push('대량구매 [10개+]');
+      const bonusConfig = getBulkPurchaseBonusConfig(itemCount);
+      if (bonusConfig) {
+        pointsDetail.push(bonusConfig.description);
+        return bonusConfig.points;
       }
-
-      return bonusPoints;
+      return 0;
     },
     []
   );
+
+  // 대량 구매 보너스 설정 가져오기
+  const getBulkPurchaseBonusConfig = useCallback((itemCount: number) => {
+    if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
+      return { points: POINT_RATES.BULK_30, description: '대량구매 [30개+]' };
+    }
+    if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
+      return { points: POINT_RATES.BULK_20, description: '대량구매 [20개+]' };
+    }
+    if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
+      return { points: POINT_RATES.BULK_10, description: '대량구매 [10개+]' };
+    }
+    return null;
+  }, []);
 
   // 보너스 포인트 계산
   const calculateBonusPoints = useCallback(
@@ -257,35 +263,38 @@ export const useCart = (
         return { finalPoints: 0, pointsDetail: [] };
       }
 
-      // 기본 포인트 계산 (0.1% = 1,000원당 1포인트)
-      const basePoints = Math.floor(totalAmount * POINT_RATES.DEFAULT);
-      let finalPoints = 0;
       const pointsDetail: string[] = [];
+      const basePoints = calculateBasePoints(totalAmount, pointsDetail);
+      const tuesdayBonus = calculateTuesdayBonus(basePoints, pointsDetail);
+      const combinationBonus = calculateCombinationBonus(cartItems, productList, pointsDetail);
+      const bulkBonus = calculateBulkPurchaseBonus(itemCount, pointsDetail);
 
-      if (basePoints > 0) {
-        finalPoints = basePoints;
-        pointsDetail.push(`기본: ${basePoints}p`);
-      }
-
-      // 화요일 2배 포인트
-      if (new Date().getDay() === WEEKDAYS.TUESDAY) {
-        if (basePoints > 0) {
-          finalPoints = basePoints * POINT_RATES.TUESDAY_MULTIPLIER;
-          pointsDetail.push('화요일 2배');
-        }
-      }
-
-      // 상품 조합 보너스 포인트
-      finalPoints += calculateCombinationBonus(cartItems, productList, pointsDetail);
-
-      // 대량 구매 보너스 포인트
-      finalPoints += calculateBulkPurchaseBonus(itemCount, pointsDetail);
-
-      const result: BonusPointsInfoType = { finalPoints, pointsDetail };
-
-      return result;
+      const finalPoints = basePoints + tuesdayBonus + combinationBonus + bulkBonus;
+      return { finalPoints, pointsDetail };
     },
     [calculateCombinationBonus, calculateBulkPurchaseBonus]
+  );
+
+  // 기본 포인트 계산
+  const calculateBasePoints = useCallback((totalAmount: number, pointsDetail: string[]): number => {
+    const basePoints = Math.floor(totalAmount * POINT_RATES.DEFAULT);
+    if (basePoints > 0) {
+      pointsDetail.push(`기본: ${basePoints}p`);
+    }
+    return basePoints;
+  }, []);
+
+  // 화요일 보너스 포인트 계산
+  const calculateTuesdayBonus = useCallback(
+    (basePoints: number, pointsDetail: string[]): number => {
+      if (new Date().getDay() === WEEKDAYS.TUESDAY && basePoints > 0) {
+        const tuesdayBonus = basePoints * POINT_RATES.TUESDAY_MULTIPLIER;
+        pointsDetail.push('화요일 2배');
+        return tuesdayBonus;
+      }
+      return 0;
+    },
+    []
   );
 
   // 장바구니 총합 계산 (메인 함수)

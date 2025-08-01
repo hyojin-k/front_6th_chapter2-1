@@ -20,17 +20,18 @@ export const findLowStockItems = (products: ProductType[]): string[] => {
 
 // 재고 메시지 생성
 export const getStockMessage = (products: ProductType[]): string => {
-  let stockMsg = '';
-  products.forEach((item) => {
-    if (item.quantity < QUANTITY_THRESHOLDS.LOW_STOCK) {
-      if (item.quantity > 0) {
-        stockMsg += `${item.name}: 재고 부족 (${item.quantity}개 남음)\n`;
-      } else {
-        stockMsg += `${item.name}: 품절\n`;
-      }
-    }
-  });
-  return stockMsg;
+  return products
+    .filter((item) => item.quantity < QUANTITY_THRESHOLDS.LOW_STOCK)
+    .map((item) => generateStockItemMessage(item))
+    .join('\n');
+};
+
+// 개별 상품 재고 메시지 생성
+const generateStockItemMessage = (item: ProductType): string => {
+  if (item.quantity > 0) {
+    return `${item.name}: 재고 부족 (${item.quantity}개 남음)`;
+  }
+  return `${item.name}: 품절`;
 };
 
 // 총 재고 계산
