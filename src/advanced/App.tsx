@@ -104,7 +104,7 @@ const App: React.FC = () => {
         />
       </GridContainer>
 
-      <ManualToggle onToggle={openManual} />
+      <ManualToggle onToggle={openManual} isOpen={isManualOpen} />
 
       <ManualOverlay isOpen={isManualOpen} onClose={closeManual}>
         <Manual isOpen={isManualOpen} onClose={closeManual} />

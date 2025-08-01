@@ -16,6 +16,17 @@ import {
   MONITOR_ARM,
   DISCOUNT_RATES,
 } from '../constants';
+import {
+  calculateIndividualDiscount,
+  calculateBulkDiscount,
+  calculateTuesdayDiscount,
+  getProductCounts,
+  calculateTotal,
+  findProductById,
+  findLowStockItems,
+  getStockMessage,
+  getTotalStock,
+} from '../utils';
 
 export const useCart = (
   products: ProductType[],
@@ -24,9 +35,9 @@ export const useCart = (
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
 
   // 장바구니 관련 유틸리티 함수들
-  const findProductById = useCallback(
+  const findProductInList = useCallback(
     (productList: ProductType[], id: string): ProductType | undefined => {
-      return productList.find((product) => product.id === id);
+      return findProductById(productList, id);
     },
     []
   );
@@ -46,61 +57,35 @@ export const useCart = (
     return cartContainer.children;
   }, []);
 
-  // 재고 관련 함수들
-  const getTotalStock = useCallback((productList: ProductType[]): number => {
-    return productList.reduce((sum, product) => sum + product.quantity, 0);
+  // 재고 관련 함수들 (유틸리티 함수 래핑)
+  const getTotalStockCount = useCallback((productList: ProductType[]): number => {
+    return getTotalStock(productList);
   }, []);
 
-  const findLowStockItems = useCallback((productList: ProductType[]): string[] => {
-    return productList
-      .filter((product) => product.quantity < QUANTITY_THRESHOLDS.LOW_STOCK && product.quantity > 0)
-      .map((product) => product.name);
+  const getLowStockItems = useCallback((productList: ProductType[]): string[] => {
+    return findLowStockItems(productList);
   }, []);
 
-  const getStockMessage = useCallback((productList: ProductType[]): string => {
-    let stockMsg = '';
-    productList.forEach((item) => {
-      if (item.quantity < QUANTITY_THRESHOLDS.LOW_STOCK) {
-        if (item.quantity > 0) {
-          stockMsg += `${item.name}: 재고 부족 (${item.quantity}개 남음)\n`;
-        } else {
-          stockMsg += `${item.name}: 품절\n`;
-        }
-      }
-    });
-    return stockMsg;
+  const getStockMessageText = useCallback((productList: ProductType[]): string => {
+    return getStockMessage(productList);
   }, []);
 
-  // 수량 계산 함수들
-  const calculateTotal = useCallback((cartItems: CartItemType[]): number => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  // 수량 계산 함수들 (유틸리티 함수 래핑)
+  const calculateTotalQuantity = useCallback((cartItems: CartItemType[]): number => {
+    return calculateTotal(cartItems);
   }, []);
 
-  const getProductCounts = useCallback(
+  const getProductCountsMap = useCallback(
     (cartItems: CartItemType[], productList: ProductType[]): ProductCountsType => {
-      return cartItems.reduce((counts, cartItem) => {
-        const product = productList.find((p) => p.id === cartItem.id);
-        if (product) {
-          counts[product.id] = (counts[product.id] || 0) + cartItem.quantity;
-        }
-        return counts;
-      }, {} as ProductCountsType);
+      return getProductCounts(cartItems, productList);
     },
     []
   );
 
-  // 개별 상품 할인 계산
-  const calculateIndividualDiscount = useCallback((product: ProductType, quantity: number) => {
-    let applicable = false;
-    let rate = 0;
-
-    // 개별 상품 할인 (5개 이상 구매 시 10% 할인)
-    if (quantity >= QUANTITY_THRESHOLDS.BULK_DISCOUNT) {
-      applicable = true;
-      rate = DISCOUNT_RATES[product.id] || 0;
-    }
-
-    return { applicable, rate };
+  // 개별 상품 할인 계산 (유틸리티 함수 래핑)
+  const calculateIndividualDiscountRate = useCallback((product: ProductType, quantity: number) => {
+    const result = calculateIndividualDiscount(product, quantity);
+    return { applicable: result.applicable, rate: result.rate };
   }, []);
 
   // 장바구니 아이템별 계산 및 개별 할인 적용
@@ -113,7 +98,7 @@ export const useCart = (
 
           const quantity = cartItem.quantity;
           const itemTotal = product.price * quantity;
-          const individualDiscount = calculateIndividualDiscount(product, quantity);
+          const individualDiscount = calculateIndividualDiscountRate(product, quantity);
 
           return {
             quantity,
@@ -152,33 +137,20 @@ export const useCart = (
     [calculateIndividualDiscount]
   );
 
-  // 대량 할인 계산
-  const calculateBulkDiscount = useCallback((itemCount: number, subtotal: number) => {
-    let applicable = false;
-    let rate = 0;
-    let finalAmount = subtotal;
-
-    if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-      applicable = true;
-      rate = DISCOUNT_RATES.BULK;
-      finalAmount = subtotal * (1 - DISCOUNT_RATES.BULK);
-    } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
-      applicable = true;
-      rate = 0.2;
-      finalAmount = subtotal * 0.8;
-    } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
-      applicable = true;
-      rate = 0.1;
-      finalAmount = subtotal * 0.9;
-    }
-
-    return { applicable, rate, finalAmount };
+  // 대량 할인 계산 (유틸리티 함수 래핑)
+  const calculateBulkDiscountRate = useCallback((itemCount: number, subtotal: number) => {
+    const result = calculateBulkDiscount(itemCount, subtotal);
+    return {
+      applicable: result.applicable,
+      rate: result.rate,
+      finalAmount: result.finalAmount,
+    };
   }, []);
 
   // 대량 구매 할인 적용
   const applyBulkDiscount = useCallback(
     (totalAmount: number, subtotal: number, itemCount: number) => {
-      const bulkDiscount = calculateBulkDiscount(itemCount, subtotal);
+      const bulkDiscount = calculateBulkDiscountRate(itemCount, subtotal);
 
       if (bulkDiscount.applicable) {
         return {
@@ -194,20 +166,20 @@ export const useCart = (
     [calculateBulkDiscount]
   );
 
-  // 화요일 할인 계산
-  const calculateTuesdayDiscount = useCallback((totalAmount: number) => {
-    const today = new Date().getDay();
-    const isTuesday = today === WEEKDAYS.TUESDAY;
-    const applicable = isTuesday;
-    const finalAmount = applicable ? totalAmount * (1 - DISCOUNT_RATES.TUESDAY) : totalAmount;
-
-    return { applicable, finalAmount, isTuesday };
+  // 화요일 할인 계산 (유틸리티 함수 래핑)
+  const calculateTuesdayDiscountRate = useCallback((totalAmount: number) => {
+    const result = calculateTuesdayDiscount(totalAmount);
+    return {
+      applicable: result.applicable,
+      finalAmount: result.finalAmount,
+      isTuesday: result.isTuesday,
+    };
   }, []);
 
   // 화요일 할인 적용
   const applyTuesdayDiscount = useCallback(
     (totalAmount: number, originalTotal: number) => {
-      const tuesdayDiscount = calculateTuesdayDiscount(totalAmount);
+      const tuesdayDiscount = calculateTuesdayDiscountRate(totalAmount);
 
       if (tuesdayDiscount.applicable) {
         const discountRate = 1 - tuesdayDiscount.finalAmount / originalTotal;
@@ -228,7 +200,7 @@ export const useCart = (
   // 상품 조합 보너스 포인트 계산
   const calculateCombinationBonus = useCallback(
     (cartItems: CartItemType[], productList: ProductType[], pointsDetail: string[]): number => {
-      const productCounts = getProductCounts(cartItems, productList);
+      const productCounts = getProductCountsMap(cartItems, productList);
       const hasKeyboard = productCounts[KEYBOARD] > 0;
       const hasMouse = productCounts[MOUSE] > 0;
       const hasMonitorArm = productCounts[MONITOR_ARM] > 0;
@@ -319,7 +291,7 @@ export const useCart = (
   // 장바구니 총합 계산 (메인 함수)
   const calculateCartTotals = useCallback(
     (cartItems: CartItemType[], productList: ProductType[]): CalculationResultType => {
-      const lowStockItems = findLowStockItems(productList);
+      const lowStockItems = getLowStockItems(productList);
       const itemTotals = calculateCartItemTotals(cartItems, productList);
       const originalTotal = itemTotals.subtotal;
 
@@ -360,13 +332,7 @@ export const useCart = (
         bonusPoints,
       };
     },
-    [
-      findLowStockItems,
-      calculateCartItemTotals,
-      applyBulkDiscount,
-      applyTuesdayDiscount,
-      calculateBonusPoints,
-    ]
+    [calculateCartItemTotals, applyBulkDiscount, applyTuesdayDiscount, calculateBonusPoints]
   );
 
   // 계산 결과를 메모이제이션
@@ -477,13 +443,13 @@ export const useCart = (
     removeItem,
     updateCalculation,
     // 계산 관련 함수들도 외부에서 사용할 수 있도록 노출
-    getTotalStock,
-    getStockMessage,
-    calculateTotal,
-    getProductCounts,
+    getTotalStockCount,
+    getStockMessageText,
+    calculateTotalQuantity,
+    getProductCountsMap,
     calculateBonusPoints,
     // 장바구니 유틸리티 함수들
-    findProductById,
+    findProductInList,
     appendCartItem,
     findCartItem,
     getCartChildren,

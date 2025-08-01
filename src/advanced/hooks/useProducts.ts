@@ -1,43 +1,23 @@
 import { useState, useCallback } from 'react';
 import { ProductType } from '../types';
 import { PRODUCT_LIST, DISCOUNT_RATES, QUANTITY_THRESHOLDS } from '../constants';
+import {
+  getPriceColor,
+  generatePriceText,
+  hasDiscount,
+  findProductById,
+  findLowStockProducts,
+  findDiscountedProducts,
+} from '../utils';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
   const [selectedProduct, setSelectedProduct] = useState<string>('p1'); // 키보드로 기본값 설정
   const [lastSelectedProduct, setLastSelectedProduct] = useState<string>('p1'); // 마지막 선택된 상품
 
-  // 가격 색상 결정
-  const getPriceColor = useCallback((product: ProductType): string => {
-    if (product.onSale) {
-      return 'text-red-500';
-    }
-    if (product.suggestSale) {
-      return 'text-blue-500';
-    }
-    return 'text-black';
-  }, []);
-
   // 상품명 생성
   const generateProductName = useCallback((product: ProductType): string => {
     return product.name;
-  }, []);
-
-  // 가격 텍스트 생성
-  const generatePriceText = useCallback((product: ProductType): string => {
-    const currentPrice = product.price;
-    const originalPrice = product.originalPrice;
-
-    if (currentPrice < originalPrice) {
-      return `₩${currentPrice.toLocaleString()} (할인)`;
-    }
-
-    return `₩${currentPrice.toLocaleString()}`;
-  }, []);
-
-  // 할인 여부 확인
-  const hasDiscount = useCallback((product: ProductType): boolean => {
-    return product.price < product.originalPrice;
   }, []);
 
   // 원가 가져오기
@@ -129,10 +109,10 @@ export const useProducts = () => {
     );
   }, []);
 
-  // 상품 찾기
-  const findProductById = useCallback(
+  // 상품 찾기 (유틸리티 함수 래핑)
+  const findProduct = useCallback(
     (productId: string): ProductType | undefined => {
-      return products.find((product) => product.id === productId);
+      return findProductById(products, productId);
     },
     [products]
   );
@@ -165,14 +145,14 @@ export const useProducts = () => {
     );
   }, []);
 
-  // 재고 부족 상품 찾기
-  const findLowStockProducts = useCallback((): ProductType[] => {
-    return products.filter((product) => product.quantity <= QUANTITY_THRESHOLDS.LOW_STOCK);
+  // 재고 부족 상품 찾기 (유틸리티 함수 래핑)
+  const getLowStockProducts = useCallback((): ProductType[] => {
+    return findLowStockProducts(products);
   }, [products]);
 
-  // 할인 상품 찾기
-  const findDiscountedProducts = useCallback((): ProductType[] => {
-    return products.filter((product) => product.onSale || product.suggestSale);
+  // 할인 상품 찾기 (유틸리티 함수 래핑)
+  const getDiscountedProducts = useCallback((): ProductType[] => {
+    return findDiscountedProducts(products);
   }, [products]);
 
   return {
@@ -196,7 +176,7 @@ export const useProducts = () => {
     addProduct,
     removeProduct,
     updateProduct,
-    findLowStockProducts,
-    findDiscountedProducts,
+    getLowStockProducts,
+    getDiscountedProducts,
   };
 };

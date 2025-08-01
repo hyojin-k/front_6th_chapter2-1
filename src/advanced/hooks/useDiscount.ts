@@ -1,55 +1,13 @@
 import { useCallback } from 'react';
-import { DISCOUNT_RATES, QUANTITY_THRESHOLDS, WEEKDAYS } from '../constants';
+import { DISCOUNT_RATES, QUANTITY_THRESHOLDS } from '../constants';
 import { ProductType, CalculationResultType } from '../types';
+import {
+  calculateIndividualDiscount,
+  calculateBulkDiscount,
+  calculateTuesdayDiscount,
+} from '../utils';
 
 export const useDiscount = () => {
-  // 개별 상품 할인 계산
-  const calculateIndividualDiscount = useCallback((product: ProductType, quantity: number) => {
-    if (quantity >= QUANTITY_THRESHOLDS.BULK_DISCOUNT) {
-      const discountRate = DISCOUNT_RATES[product.id] || 0;
-      return {
-        rate: discountRate,
-        amount: product.price * quantity * discountRate,
-        applicable: discountRate > 0,
-      };
-    }
-    return { rate: 0, amount: 0, applicable: false };
-  }, []);
-
-  // 대량 구매 할인 계산
-  const calculateBulkDiscount = useCallback((itemCount: number, subtotal: number) => {
-    if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-      const discountRate = DISCOUNT_RATES.BULK;
-      const discountedTotal = subtotal * (1 - discountRate);
-      return {
-        rate: discountRate,
-        amount: subtotal - discountedTotal,
-        finalAmount: discountedTotal,
-        applicable: true,
-      };
-    }
-    return { rate: 0, amount: 0, finalAmount: subtotal, applicable: false };
-  }, []);
-
-  // 화요일 할인 계산
-  const calculateTuesdayDiscount = useCallback((totalAmount: number) => {
-    const today = new Date();
-    const isTuesday = today.getDay() === WEEKDAYS.TUESDAY;
-
-    if (isTuesday && totalAmount > 0) {
-      const discountRate = DISCOUNT_RATES.TUESDAY;
-      const discountedAmount = totalAmount * (1 - discountRate);
-      return {
-        rate: discountRate,
-        amount: totalAmount - discountedAmount,
-        finalAmount: discountedAmount,
-        applicable: true,
-        isTuesday: true,
-      };
-    }
-    return { rate: 0, amount: 0, finalAmount: totalAmount, applicable: false, isTuesday };
-  }, []);
-
   // 번개세일 할인 적용
   const applyLightningDiscount = useCallback((product: ProductType) => {
     if (!product.onSale) {
@@ -181,7 +139,7 @@ export const useDiscount = () => {
 
       return tuesdayDiscount.finalAmount;
     },
-    [calculateBulkDiscount, calculateTuesdayDiscount]
+    []
   );
 
   return {

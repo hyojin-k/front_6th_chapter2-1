@@ -2,10 +2,14 @@ import React from 'react';
 
 export interface ManualTogglePropsType {
   onToggle: () => void;
+  isOpen?: boolean;
   children?: React.ReactNode;
 }
 
-const ManualToggle: React.FC<ManualTogglePropsType> = ({ onToggle, children }) => {
+const ManualToggle: React.FC<ManualTogglePropsType> = ({ onToggle, isOpen = false, children }) => {
+  // 모달이 열려있으면 버튼을 숨김
+  if (isOpen) return null;
+
   return (
     <button
       className="fixed top-4 right-4 bg-black text-white p-3 rounded-full hover:bg-gray-900 transition-colors z-50"
