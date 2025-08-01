@@ -149,7 +149,7 @@ export const useDiscount = () => {
       if (calculationResult.itemCount >= 30) {
         discounts.push({
           name: '🎉 대량구매 할인 (30개 이상)',
-          rate: 25,
+          rate: DISCOUNT_RATES.BULK * 100,
           color: 'text-green-400',
         });
       } else if (calculationResult.itemDiscounts.length > 0) {
@@ -167,7 +167,7 @@ export const useDiscount = () => {
       if (calculationResult.isTuesday && calculationResult.totalAmount > 0) {
         discounts.push({
           name: '🌟 화요일 추가 할인',
-          rate: 10,
+          rate: DISCOUNT_RATES.TUESDAY * 100,
           color: 'text-purple-400',
         });
       }

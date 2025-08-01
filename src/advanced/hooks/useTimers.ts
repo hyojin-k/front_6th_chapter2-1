@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { CartItemType, ProductType } from '../types';
-import { PRODUCT_LIST } from '../constants';
+import { PRODUCT_LIST, TIMER_INTERVALS } from '../constants';
 
 export const useTimers = (
   updateProductList: (newProductList: ProductType[]) => void,
@@ -73,15 +73,21 @@ export const useTimers = (
     clearAllTimers();
 
     // 초기 타이머 시작 (랜덤 딜레이)
-    const lightningDelay = Math.random() * 10000; // 0~10초
-    const suggestDelay = Math.random() * 20000; // 0~20초
+    const lightningDelay = Math.random() * TIMER_INTERVALS.LIGHTNING_DELAY;
+    const suggestDelay = Math.random() * TIMER_INTERVALS.SUGGEST_DELAY;
 
     timerRefs.current.lightningTimer = setTimeout(executeLightningSale, lightningDelay);
     timerRefs.current.suggestTimer = setTimeout(executeSuggestSale, suggestDelay);
 
     // 주기적 타이머 설정
-    timerRefs.current.lightningInterval = setInterval(executeLightningSale, 30000);
-    timerRefs.current.suggestInterval = setInterval(executeSuggestSale, 60000);
+    timerRefs.current.lightningInterval = setInterval(
+      executeLightningSale,
+      TIMER_INTERVALS.LIGHTNING_SALE
+    );
+    timerRefs.current.suggestInterval = setInterval(
+      executeSuggestSale,
+      TIMER_INTERVALS.SUGGEST_SALE
+    );
 
     // 계산 결과 업데이트
     updateCalculation();

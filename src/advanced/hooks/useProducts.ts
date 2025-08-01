@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ProductType } from '../types';
-import { PRODUCT_LIST } from '../constants';
+import { PRODUCT_LIST, DISCOUNT_RATES, QUANTITY_THRESHOLDS } from '../constants';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductType[]>(PRODUCT_LIST);
@@ -89,11 +89,11 @@ export const useProducts = () => {
 
             if (discountType === 'lightning') {
               // 번개세일: 20% 할인
-              newPrice = Math.round(product.price * 0.8);
+              newPrice = Math.round(product.price * (1 - DISCOUNT_RATES.LIGHTNING));
               newOriginalPrice = product.price;
             } else if (discountType === 'suggest') {
               // 추천할인: 5% 할인
-              newPrice = Math.round(product.price * 0.95);
+              newPrice = Math.round(product.price * (1 - DISCOUNT_RATES.SUGGEST));
               newOriginalPrice = product.price;
             }
 
@@ -167,7 +167,7 @@ export const useProducts = () => {
 
   // 재고 부족 상품 찾기
   const findLowStockProducts = useCallback((): ProductType[] => {
-    return products.filter((product) => product.quantity <= 5);
+    return products.filter((product) => product.quantity <= QUANTITY_THRESHOLDS.LOW_STOCK);
   }, [products]);
 
   // 할인 상품 찾기

@@ -14,6 +14,7 @@ import {
   KEYBOARD,
   MOUSE,
   MONITOR_ARM,
+  DISCOUNT_RATES,
 } from '../constants';
 
 export const useCart = (
@@ -96,7 +97,7 @@ export const useCart = (
     // 개별 상품 할인 (5개 이상 구매 시 10% 할인)
     if (quantity >= QUANTITY_THRESHOLDS.BULK_DISCOUNT) {
       applicable = true;
-      rate = 0.1;
+      rate = DISCOUNT_RATES[product.id] || 0;
     }
 
     return { applicable, rate };
@@ -159,8 +160,8 @@ export const useCart = (
 
     if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
       applicable = true;
-      rate = 0.3;
-      finalAmount = subtotal * 0.7;
+      rate = DISCOUNT_RATES.BULK;
+      finalAmount = subtotal * (1 - DISCOUNT_RATES.BULK);
     } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
       applicable = true;
       rate = 0.2;
@@ -198,7 +199,7 @@ export const useCart = (
     const today = new Date().getDay();
     const isTuesday = today === WEEKDAYS.TUESDAY;
     const applicable = isTuesday;
-    const finalAmount = applicable ? totalAmount * 0.9 : totalAmount;
+    const finalAmount = applicable ? totalAmount * (1 - DISCOUNT_RATES.TUESDAY) : totalAmount;
 
     return { applicable, finalAmount, isTuesday };
   }, []);
@@ -285,7 +286,7 @@ export const useCart = (
       }
 
       // 기본 포인트 계산 (0.1% = 1,000원당 1포인트)
-      const basePoints = Math.floor(totalAmount * 0.001);
+      const basePoints = Math.floor(totalAmount * POINT_RATES.DEFAULT);
       let finalPoints = 0;
       const pointsDetail: string[] = [];
 
