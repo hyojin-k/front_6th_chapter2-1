@@ -36,7 +36,7 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
     bonusPoints: { finalPoints: 0, pointsDetail: [] },
   };
 
-  // 커스텀 훅을 사용하여 할인 정보 계산
+  // 할인 정보 계산
   const totalDiscountRate = calculateDiscountRate(result.subtotal, result.totalAmount);
   const totalDiscountAmount = calculateDiscountAmount(result.subtotal, result.totalAmount);
   const discountInfo = generateOrderSummaryDiscountInfo(result);
@@ -114,14 +114,18 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({
               <span className="text-sm uppercase tracking-wider">Total</span>
               <div className="text-2xl tracking-tight">{formatPrice(result.totalAmount)}</div>
             </div>
-            <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
-              적립 포인트: {result.bonusPoints.finalPoints}p
-            </div>
-            {/* 포인트 상세 내역 */}
-            {result.bonusPoints.pointsDetail.length > 0 && (
-              <div className="text-xs text-gray-400 mt-1 text-right">
-                {result.bonusPoints.pointsDetail.join(', ')}
-              </div>
+            {cartItems.length > 0 && (
+              <>
+                <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
+                  적립 포인트: {result.bonusPoints.finalPoints}p
+                </div>
+                {/* 포인트 상세 내역 */}
+                {result.bonusPoints.pointsDetail.length > 0 && (
+                  <div className="text-xs text-gray-400 mt-1 text-right">
+                    {result.bonusPoints.pointsDetail.join(', ')}
+                  </div>
+                )}
+              </>
             )}
           </div>
           {result.isTuesday && (

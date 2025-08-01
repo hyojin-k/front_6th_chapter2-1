@@ -34,7 +34,7 @@ export const useCart = (
 ) => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
 
-  // 장바구니 관련 유틸리티 함수들
+  // 내부적으로 사용되는 유틸리티 함수들
   const findProductInList = useCallback(
     (productList: ProductType[], id: string): ProductType | undefined => {
       return findProductById(productList, id);
@@ -57,7 +57,6 @@ export const useCart = (
     return cartContainer.children;
   }, []);
 
-  // 재고 관련 함수들 (유틸리티 함수 래핑)
   const getTotalStockCount = useCallback((productList: ProductType[]): number => {
     return getTotalStock(productList);
   }, []);
@@ -70,7 +69,6 @@ export const useCart = (
     return getStockMessage(productList);
   }, []);
 
-  // 수량 계산 함수들 (유틸리티 함수 래핑)
   const calculateTotalQuantity = useCallback((cartItems: CartItemType[]): number => {
     return calculateTotal(cartItems);
   }, []);
@@ -82,7 +80,6 @@ export const useCart = (
     []
   );
 
-  // 개별 상품 할인 계산 (유틸리티 함수 래핑)
   const calculateIndividualDiscountRate = useCallback((product: ProductType, quantity: number) => {
     const result = calculateIndividualDiscount(product, quantity);
     return { applicable: result.applicable, rate: result.rate };
@@ -224,7 +221,7 @@ export const useCart = (
     [getProductCounts]
   );
 
-  // 대량 구매 보너스 포인트 계산
+  // 대량 구매 보너스 포인트 계산 - 개선된 버전
   const calculateBulkPurchaseBonus = useCallback(
     (itemCount: number, pointsDetail: string[]): number => {
       const bonusConfig = getBulkPurchaseBonusConfig(itemCount);
@@ -251,7 +248,7 @@ export const useCart = (
     return null;
   }, []);
 
-  // 보너스 포인트 계산
+  // 보너스 포인트 계산 - 개선된 버전
   const calculateBonusPoints = useCallback(
     (
       cartItems: CartItemType[],

@@ -50,7 +50,6 @@ const ProductDropdown: React.FC<ProductDropdownPropsType> = ({
     const selectedProductId = e.target.value;
     const selectedProduct = products.find((p) => p.id === selectedProductId);
 
-    // 품절된 상품은 선택할 수 없음
     if (selectedProduct && selectedProduct.quantity === 0) {
       return;
     }

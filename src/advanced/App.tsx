@@ -16,7 +16,6 @@ import {
 import { useCart, useProducts, useTimers, useManual } from './hooks';
 
 const App: React.FC = () => {
-  // 커스텀 훅들 사용
   const {
     products,
     selectedProduct,
@@ -32,7 +31,6 @@ const App: React.FC = () => {
 
   const { isManualOpen, openManual, closeManual } = useManual();
 
-  // 타이머 설정
   useTimers(
     updateProductList,
     updateCalculation,
@@ -42,15 +40,7 @@ const App: React.FC = () => {
     applyProductDiscount
   );
 
-  // 장바구니에 상품 추가 핸들러 (메모이제이션)
-  const handleAddToCart = useCallback(() => {
-    const success = addToCart(selectedProduct);
-    if (success) {
-      // 성공적으로 추가된 경우 추가 로직이 필요하면 여기에 작성
-    }
-  }, [selectedProduct, addToCart]);
-
-  // 장바구니 아이템 수량 변경 핸들러 (메모이제이션)
+  // 장바구니 아이템 수량 변경 핸들러
   const handleQuantityChange = useCallback(
     (productId: string, change: number) => {
       updateQuantity(productId, change);
@@ -58,7 +48,7 @@ const App: React.FC = () => {
     [updateQuantity]
   );
 
-  // 장바구니 아이템 제거 핸들러 (메모이제이션)
+  // 장바구니 아이템 제거 핸들러
   const handleRemoveItem = useCallback(
     (productId: string) => {
       removeItem(productId);
@@ -66,7 +56,7 @@ const App: React.FC = () => {
     [removeItem]
   );
 
-  // 상품 선택 핸들러 (메모이제이션)
+  // 상품 선택 핸들러
   const handleProductSelect = useCallback(
     (productId: string) => {
       selectProduct(productId);
@@ -86,7 +76,7 @@ const App: React.FC = () => {
               onChange={handleProductSelect}
               products={products}
             />
-            <AddButton onClick={handleAddToCart} />
+            <AddButton onClick={() => addToCart(selectedProduct)} />
             <StockInfo products={products} />
           </SelectorContainer>
 

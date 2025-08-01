@@ -39,56 +39,6 @@ export const useDiscount = () => {
     []
   );
 
-  // 할인 정보 생성 (표시용)
-  const generateDiscountInfo = useCallback(
-    (
-      itemCount: number,
-      itemDiscounts: Array<{ name: string; discount: number }>,
-      isTuesday: boolean,
-      totalAmount: number
-    ) => {
-      const discounts: Array<{
-        type: string;
-        name: string;
-        rate: number;
-        color: string;
-      }> = [];
-
-      // 대량 구매 할인
-      if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
-        discounts.push({
-          type: 'bulk',
-          name: '🎉 대량구매 할인 (30개 이상)',
-          rate: DISCOUNT_RATES.BULK * 100,
-          color: 'text-green-400',
-        });
-      } else if (itemDiscounts.length > 0) {
-        // 개별 상품 할인
-        itemDiscounts.forEach((item) => {
-          discounts.push({
-            type: 'individual',
-            name: `${item.name} (10개↑)`,
-            rate: item.discount,
-            color: 'text-green-400',
-          });
-        });
-      }
-
-      // 화요일 할인
-      if (isTuesday) {
-        discounts.push({
-          type: 'tuesday',
-          name: '🎉 화요일 특별 할인',
-          rate: DISCOUNT_RATES.TUESDAY * 100,
-          color: 'text-blue-400',
-        });
-      }
-
-      return discounts;
-    },
-    []
-  );
-
   // OrderSummary 전용 할인 정보 생성
   const generateOrderSummaryDiscountInfo = useCallback(
     (calculationResult: CalculationResultType) => {
@@ -148,7 +98,6 @@ export const useDiscount = () => {
     calculateTuesdayDiscount,
     applyLightningDiscount,
     applySuggestDiscount,
-    generateDiscountInfo,
     generateOrderSummaryDiscountInfo,
     calculateDiscountRate,
     calculateDiscountAmount,
