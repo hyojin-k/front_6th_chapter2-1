@@ -6,7 +6,7 @@ export interface GridContainerPropsType {
 
 const GridContainer: React.FC<GridContainerPropsType> = ({ children }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-6 flex-1 overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 flex-1 overflow-hidden">
       {children}
     </div>
   );

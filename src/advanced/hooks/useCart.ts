@@ -238,13 +238,13 @@ export const useCart = (
       // 키보드 + 마우스 조합
       if (hasKeyboard && hasMouse) {
         bonusPoints += POINT_RATES.SET_KEYBOARD_MOUSE;
-        pointsDetail.push('키보드+마우스 조합');
+        pointsDetail.push('키보드+마우스 세트');
       }
 
       // 키보드 + 마우스 + 모니터암 조합
       if (hasKeyboard && hasMouse && hasMonitorArm) {
         bonusPoints += POINT_RATES.SET_KEYBOARD_MOUSE_MONITOR_ARM;
-        pointsDetail.push('키보드+마우스+모니터암 조합');
+        pointsDetail.push('풀세트 구매');
       }
 
       return bonusPoints;
@@ -259,13 +259,13 @@ export const useCart = (
 
       if (itemCount >= QUANTITY_THRESHOLDS.BULK_30) {
         bonusPoints += POINT_RATES.BULK_30;
-        pointsDetail.push('대량구매 30개+');
+        pointsDetail.push('대량구매 [30개+]');
       } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_20) {
         bonusPoints += POINT_RATES.BULK_20;
-        pointsDetail.push('대량구매 20개+');
+        pointsDetail.push('대량구매 [20개+]');
       } else if (itemCount >= QUANTITY_THRESHOLDS.BULK_10) {
         bonusPoints += POINT_RATES.BULK_10;
-        pointsDetail.push('대량구매 10개+');
+        pointsDetail.push('대량구매 [10개+]');
       }
 
       return bonusPoints;

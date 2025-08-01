@@ -1,12 +1,18 @@
 import React from 'react';
-import { CalculationResultType } from '../../types';
+import { CalculationResultType, CartItemType, ProductType } from '../../types';
 import { useDiscount } from '../../hooks/useDiscount';
 
 export interface OrderSummaryPropsType {
   calculationResult: CalculationResultType;
+  cartItems: CartItemType[];
+  products: ProductType[];
 }
 
-const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult }) => {
+const OrderSummary: React.FC<OrderSummaryPropsType> = ({
+  calculationResult,
+  cartItems,
+  products,
+}) => {
   const { calculateDiscountRate, calculateDiscountAmount, generateOrderSummaryDiscountInfo } =
     useDiscount();
 
@@ -36,34 +42,37 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult }) =>
   const discountInfo = generateOrderSummaryDiscountInfo(result);
 
   return (
-    <div className="bg-black text-white p-8 flex flex-col">
+    <div className="bg-black text-white p-10 flex flex-col">
       <h2 className="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
+
       <div className="flex-1 flex flex-col">
+        {/* 상품 목록 표시 */}
+        {cartItems.length > 0 && (
+          <div id="cart-items" className="mb-6 space-y-3">
+            {cartItems.map((cartItem) => {
+              const product = products.find((p) => p.id === cartItem.id);
+              if (!product) return null;
+
+              return (
+                <div key={cartItem.id} className="flex justify-between items-baseline">
+                  <span className="text-sm tracking-wide">
+                    {product.name} x {cartItem.quantity}
+                  </span>
+                  <span className="text-sm tracking-tight">
+                    {formatPrice(product.price * cartItem.quantity)}
+                  </span>
+                </div>
+              );
+            })}
+            <div className="border-t border-white/10 pt-3"></div>
+          </div>
+        )}
+
         <div id="summary-details" className="space-y-3">
           <div className="flex justify-between items-baseline">
             <span className="text-sm uppercase tracking-wider">Subtotal</span>
             <div className="text-sm tracking-tight">{formatPrice(result.subtotal)}</div>
           </div>
-
-          {/* 배송비 표시 */}
-          <div className="flex justify-between items-baseline">
-            <span className="text-sm uppercase tracking-wider">Shipping</span>
-            <div className="text-sm tracking-tight">Free</div>
-          </div>
-        </div>
-
-        {/* 총 할인율 영역 */}
-        {totalDiscountRate > 0 && (
-          <div className="mt-4 p-3 bg-green-600 rounded-lg">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">총 할인율</span>
-              <span className="text-lg font-bold">{totalDiscountRate.toFixed(1)}%</span>
-            </div>
-            <div className="text-sm">{formatPrice(totalDiscountAmount)} 할인되었습니다</div>
-          </div>
-        )}
-
-        <div className="mt-auto">
           {/* 할인 내역 상세 표시 */}
           {discountInfo.length > 0 && (
             <div id="discount-info" className="mb-4">
@@ -81,6 +90,25 @@ const OrderSummary: React.FC<OrderSummaryPropsType> = ({ calculationResult }) =>
             </div>
           )}
 
+          {/* 배송비 표시 */}
+          <div className="flex justify-between items-baseline">
+            <span className="text-sm uppercase tracking-wider">Shipping</span>
+            <div className="text-sm tracking-tight">Free</div>
+          </div>
+        </div>
+
+        {/* 총 할인율 영역 */}
+        {totalDiscountRate > 0 && (
+          <div className="mt-4 p-3 bg-green-500/20 rounded-lg">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm font-medium">총 할인율</span>
+              <span className="text-lg font-bold">{totalDiscountRate.toFixed(1)}%</span>
+            </div>
+            <div className="text-sm">{formatPrice(totalDiscountAmount)} 할인되었습니다</div>
+          </div>
+        )}
+
+        <div className="mt-auto">
           <div id="cart-total" className="pt-5 border-t border-white/10">
             <div className="flex justify-between items-baseline">
               <span className="text-sm uppercase tracking-wider">Total</span>
